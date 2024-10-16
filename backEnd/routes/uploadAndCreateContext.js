@@ -224,7 +224,7 @@ router.post(
 
       const totalTime = Date.now() - startTime;
       console.log(`Total processing time: ${totalTime}ms`);
-
+      console.log(file.originalname);
       // Send success response
       res.status(200).json({
         message: "File processed and embeddings created successfully",

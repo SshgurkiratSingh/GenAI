@@ -86,6 +86,7 @@ export default function UploadModal({
       }
 
       const result: ReportResponse = await response.json();
+      
       onUploadSuccess(
         result.llm.questions,
         result.llm.title,

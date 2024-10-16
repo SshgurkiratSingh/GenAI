@@ -134,8 +134,9 @@ router.get("/", (req, res) => {
 router.post("/chat", async (req, res) => {
   try {
     console.log("Received chat request");
-    const { message, history, email, fileName } = req.body;
 
+    const { message, history, email, fileName } = req.body;
+    console.log(fileName);
     if (!message) {
       console.error("Missing message in request body");
       return res.status(400).json({ error: "Message is required" });

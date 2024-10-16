@@ -18,19 +18,28 @@ const HomePage = () => {
   const [uploadedQuestions, setUploadedQuestions] = useState<string[]>([]);
   const [uploadedTitle, setUploadedTitle] = useState<string>("");
   const [text, setText] = useState("");
+  const [fileName, setFileName] = useState<string>(""); // Capture file name here
+  const [processingTime, setProcessingTime] = useState<string>("");
 
   useEffect(() => {
     const username = session?.user?.name || "Guest";
     const fullText = session
       ? `Welcome, ${username}!`
       : "Welcome to PDF Reader!";
-    
+
     setText(fullText); // Set the text without typing effect
   }, [session]);
 
-  const handleUploadSuccess = (questions: string[], title: string) => {
+  const handleUploadSuccess = (
+    questions: string[],
+    title: string,
+    uploadedFileName: string,
+    uploadedProcessingTime: string
+  ) => {
     setUploadedQuestions(questions);
     setUploadedTitle(title);
+    setFileName(uploadedFileName); // Set the file name
+    setProcessingTime(uploadedProcessingTime); // Optionally track processing time
   };
 
   const handleLoginClick = () => {
@@ -112,8 +121,10 @@ const HomePage = () => {
           setUploadedTitle("");
         }}
         initialSuggestedQueries={uploadedQuestions}
-        title={uploadedTitle}
+        title={uploadedTitle} // This is correct
+        fileName={fileName} // Fix this line to pass the actual fileName
       />
+
       {/* Login Modal */}
       <LoginModal
         visible={isLoginModalOpen}
