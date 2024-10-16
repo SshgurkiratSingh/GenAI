@@ -11,7 +11,8 @@ app.use(express.json());
 
 const uploadAndCreateContext = require("./routes/uploadAndCreateContext");
 app.use("/upload", uploadAndCreateContext);
-
+const chatWithAI = require("./routes/chatWithAI");
+app.use("/chat", rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }), chatWithAI);
 app.get("/", (req, res) => {
   res.json({ message: "Experimental Server for Collab" });
 });

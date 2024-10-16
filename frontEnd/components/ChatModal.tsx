@@ -11,12 +11,23 @@ import {
 import { Button } from "@nextui-org/button";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { Tooltip } from "@nextui-org/tooltip";
+import { Chip } from "@nextui-org/chip";
 import ReactMarkdown from "react-markdown";
+
+type AIReply = {
+  reply: string;
+  actionRequired?: {
+    moreContext?: string;
+  };
+  references: string[];
+  suggestedQueries: string[];
+};
 
 interface ChatMessage {
   id: number;
   text: string;
   sender: "user" | "ai";
+  references?: string[];
 }
 
 interface ChatModalProps {
@@ -34,9 +45,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
   title = "",
   fileName = "",
 }) => {
-  const { data: session } = useSession(); // Fetch user session
-  const userName = session?.user?.name || "User"; // Extract user's name from session
-  const userInitial = userName.charAt(0).toUpperCase(); // Get the first letter of user's name
+  const { data: session } = useSession();
+  const userName = session?.user?.name || "User";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
@@ -47,7 +58,8 @@ const ChatModal: React.FC<ChatModalProps> = ({
     initialSuggestedQueries
   );
   const audioRef = useRef<HTMLAudioElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null); // Reference to the textarea
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [chatHistory, setChatHistory] = useState<string[]>([]);
 
   useEffect(() => {
     setSuggestedQueries(initialSuggestedQueries);
@@ -55,29 +67,42 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
   const handleSend = async (): Promise<void> => {
     if (input.trim()) {
-      setMessages((prev) => [
-        ...prev,
-        { id: prev.length + 1, text: input, sender: "user" },
-      ]);
+      const newUserMessage: ChatMessage = {
+        id: messages.length + 1,
+        text: input,
+        sender: "user",
+      };
+      setMessages((prev) => [...prev, newUserMessage]);
       setInput("");
       setIsTyping(true);
 
       try {
-        const response = await axios.post<{ result: any }>(
-          "http://localhost:2500/collab/chat",
-          { input },
+        const response = await axios.post<AIReply>(
+          "http://localhost:2500/chat/chat",
+          {
+            message: input,
+            history: chatHistory,
+            email: session?.user?.email,
+            fileName: fileName,
+          },
           { headers: { "Content-Type": "application/json" } }
         );
-        const aiResponse = response.data.result;
+        const aiResponse = response.data;
 
-        setMessages((prev) => [
-          ...prev,
-          { id: prev.length + 1, text: aiResponse.reply, sender: "ai" },
-        ]);
+        const newAIMessage: ChatMessage = {
+          id: messages.length + 2,
+          text: aiResponse.reply,
+          sender: "ai",
+          references: aiResponse.references,
+        };
+        setMessages((prev) => [...prev, newAIMessage]);
 
         if (aiResponse.suggestedQueries) {
           setSuggestedQueries(aiResponse.suggestedQueries);
         }
+
+        // Update chat history
+        setChatHistory((prev) => [...prev, input, aiResponse.reply]);
 
         setIsTyping(false);
         if (audioRef.current) {
@@ -112,8 +137,8 @@ const ChatModal: React.FC<ChatModalProps> = ({
     setInput(e.target.value);
 
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto"; // Reset the height
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set the new height based on scrollHeight
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
 
@@ -128,7 +153,12 @@ const ChatModal: React.FC<ChatModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
-          <span>Chat with AI Assistant</span>
+          <span>{title || "Chat with AI Assistant"}</span>
+          {fileName && (
+            <Chip size="sm" color="primary">
+              {fileName}
+            </Chip>
+          )}
         </ModalHeader>
         <ModalBody>
           <ScrollShadow className="h-[400px]" id="chat-container">
@@ -146,7 +176,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
                     </div>
                   ) : (
                     <div className="bg-gray-200 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold">
-                      {"A"} {/* AI's initial */}
+                      {"A"}
                     </div>
                   )}
 
@@ -187,8 +217,8 @@ const ChatModal: React.FC<ChatModalProps> = ({
               onChange={handleTextareaChange}
               placeholder="Type your message..."
               rows={1}
-              className="w-full p-2 border rounded resize-none max-h-40 overflow-hidden" // Custom styling to disable resize and limit max height
-              style={{ height: "auto" }} // Make sure height is auto initially
+              className="w-full p-2 border rounded resize-none max-h-40 overflow-hidden"
+              style={{ height: "auto" }}
               maxLength={500}
             />
             <div className="flex justify-between items-center mt-2">
