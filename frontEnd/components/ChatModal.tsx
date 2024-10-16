@@ -114,7 +114,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
   }, [messages]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
           <span>Chat with AI Assistant</span>
