@@ -122,8 +122,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
                   </Button>
                 </ModalFooter>
                 <div style={{ textAlign: "center", marginTop: "10px" }}>
-                  <span>Don't have an account? </span>
-                  <Button  onClick={onRegisterClick}>
+                  <span>Don&apos;t have an account? </span>
+                  <Button onClick={onRegisterClick}>
                     Register
                   </Button>
                 </div>
