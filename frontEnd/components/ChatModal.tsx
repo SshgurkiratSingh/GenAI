@@ -54,9 +54,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
   ]);
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(
-    initialSuggestedQueries
-  );
+  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(initialSuggestedQueries);
   const audioRef = useRef<HTMLAudioElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatHistory, setChatHistory] = useState<string[]>([]);
@@ -142,6 +140,23 @@ const ChatModal: React.FC<ChatModalProps> = ({
     }
   };
 
+  const handleSuggestedQueryClick = (query: string) => {
+    setInput(query);
+
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"; // Reset to auto
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set to scroll height
+    }
+  };
+
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) { // Check if Enter is pressed and Shift is not held
+      e.preventDefault(); // Prevent the new line
+      handleSend(); // Call the send function
+    }
+  };
+
   useEffect(() => {
     const chatContainer = document.getElementById("chat-container");
     if (chatContainer) {
@@ -150,7 +165,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
   }, [messages]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
           <span>{title || "Chat with AI Assistant"}</span>
@@ -161,7 +176,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
           )}
         </ModalHeader>
         <ModalBody>
-          <ScrollShadow className="h-[400px]" id="chat-container">
+          <ScrollShadow className="h-[400px] overflow-y-auto" id="chat-container">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -215,6 +230,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
               ref={textareaRef}
               value={input}
               onChange={handleTextareaChange}
+              onKeyDown={handleTextareaKeyDown} // Add this line
               placeholder="Type your message..."
               rows={1}
               className="w-full p-2 border rounded resize-none max-h-40 overflow-hidden"
@@ -236,7 +252,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
                       key={index}
                       size="sm"
                       variant="flat"
-                      onClick={() => setInput(query)}
+                      onClick={() => handleSuggestedQueryClick(query)}
                     >
                       {query}
                     </Button>
