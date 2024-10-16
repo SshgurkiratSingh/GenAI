@@ -31,7 +31,7 @@ const NavigationBar = () => {
 
      {
       name: "Browse History",
-      href: "/config",
+      href: "/chat",
     },
     {
       name: "About Us",
