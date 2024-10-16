@@ -65,7 +65,7 @@ export default function UploadModal({
       formData.append("email", session.user.email);
 
       const response = await fetch(
-        "http://localhost:2500/upload/uploadAndCreateContext",
+        "http://192.168.1.113:2500/upload/uploadAndCreateContext",
         {
           method: "POST",
           body: formData,
