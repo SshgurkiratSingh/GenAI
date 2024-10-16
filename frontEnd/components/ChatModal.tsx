@@ -65,11 +65,12 @@ interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialSuggestedQueries?: string[];
+  title?: string;
 }
 
 type AIPersonality = "Helpful" | "Project Manager" | "Task Creator";
 
-const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggestedQueries = [] }) => {
+const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggestedQueries = [], title = '' }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
   ]);
@@ -171,7 +172,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
     <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
-          <span>Chat with AI Assistant</span>
+          <span>{title ? `Chat about: ${title}` : 'Chat with AI Assistant'}</span>
           <div className="flex items-center gap-2">
             <Dropdown>
               <DropdownTrigger>

@@ -24,7 +24,7 @@ interface ReportResponse {
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadSuccess: (response: string[]) => void;
+  onUploadSuccess: (response: string[], title: string) => void;
 }
 
 export default function UploadModal({
@@ -79,7 +79,7 @@ export default function UploadModal({
       }
 
       const result: ReportResponse = await response.json();
-      onUploadSuccess(result.llm.questions);
+      onUploadSuccess(result.llm.questions, result.llm.title);
       onClose();
     } catch (error) {
       console.error("Error uploading file:", error);

@@ -10,6 +10,7 @@ const HomePage = () => {
   const [text, setText] = useState('');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadedQuestions, setUploadedQuestions] = useState<string[]>([]);
+  const [uploadedTitle, setUploadedTitle] = useState<string>('');
 
   useEffect(() => {
     const username = session?.user?.name || "Login";
@@ -30,8 +31,9 @@ const HomePage = () => {
     return () => clearInterval(typingEffect);
   }, [session]);
 
-  const handleUploadSuccess = (questions: string[]) => {
+  const handleUploadSuccess = (questions: string[], title: string) => {
     setUploadedQuestions(questions);
+    setUploadedTitle(title);
   };
 
   return (
@@ -58,8 +60,12 @@ const HomePage = () => {
       />
       <ChatModal
         isOpen={uploadedQuestions.length > 0}
-        onClose={() => setUploadedQuestions([])}
+        onClose={() => {
+          setUploadedQuestions([]);
+          setUploadedTitle('');
+        }}
         initialSuggestedQueries={uploadedQuestions}
+        title={uploadedTitle}
       />
     </div>
   );
