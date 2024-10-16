@@ -1,0 +1,17 @@
+@keyframes typing {
+    0% {
+      width: 0;
+    }
+    80% {
+      width: 100%; /* Full width */
+    }
+    100% {
+      width: 0; /* Shrinks back */
+    }
+  }
+  
+  .animate-typing {
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typing 5s linear infinite; /* Removed alternate */
+  }

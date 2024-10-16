@@ -1,3 +1,5 @@
+
+@import './animations.css'; /* Ensure this is correct */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
