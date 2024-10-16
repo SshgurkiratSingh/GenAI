@@ -8,20 +8,15 @@ const HomePage = () => {
   const [text, setText] = useState('');
 
   useEffect(() => {
-    const username = session?.user?.name || "Login"; // Default to "Login" if no user
+    const username = session?.user?.name || "Login";
     const fullText = session ? `Hello, ${username}` : `${username}`;
     let index = 0;
 
-    // Clear previous text to avoid concatenation issues
-    setText('');
+    setText(''); // Reset text to avoid concatenation issues
 
-    // Reset the index for typing effect
-    index = 0;
-
-    // Start typing effect
     const typingEffect = setInterval(() => {
       if (index < fullText.length) {
-        setText((prev) => prev + fullText.charAt(index));
+        setText(prev => prev + fullText.charAt(index));
         index++;
       } else {
         clearInterval(typingEffect);
