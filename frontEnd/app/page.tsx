@@ -29,7 +29,8 @@ const HomePage = () => {
         </h1>
       </div>
       <div className="mt-5">
-        <button className="px-6 py-3 text-lg font-bold text-white bg-green-500 rounded transition-transform transform hover:bg-green-600 hover:scale-105">
+      
+        <button  className="px-6 py-3 text-lg font-bold text-white bg-green-500 rounded transition-transform transform hover:bg-green-600 hover:scale-105">
           Upload
         </button>
       </div>
