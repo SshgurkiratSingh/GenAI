@@ -1,31 +1,27 @@
 "use client";
 
-import { useEffect, useState } from 'react'; // Import useState
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import UploadModal from '@/components/upload';
-import ChatModal from '@/components/ChatModal';
+import UploadModal from "@/components/upload";
+import ChatModal from "@/components/ChatModal";
 
 const HomePage = () => {
   const { data: session } = useSession();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadedQuestions, setUploadedQuestions] = useState<string[]>([]);
-  const [uploadedTitle, setUploadedTitle] = useState<string>('');
+  const [uploadedTitle, setUploadedTitle] = useState<string>("");
+  const [text, setText] = useState("");
 
-<<<<<<< HEAD
-  // Directly set the text without animation
-  const username = session?.user?.name || "Login";
-  const fullText = session ? `Hello, ${username}` : `${username}`;
-=======
   useEffect(() => {
     const username = session?.user?.name || "Login";
     const fullText = session ? `Hello, ${username}` : `${username}`;
     let index = 0;
 
-    setText(''); // Reset text to avoid concatenation issues
+    setText(""); // Reset text to avoid concatenation issues
 
     const typingEffect = setInterval(() => {
       if (index < fullText.length) {
-        setText(prev => prev + fullText.charAt(index));
+        setText((prev) => prev + fullText.charAt(index));
         index++;
       } else {
         clearInterval(typingEffect);
@@ -34,7 +30,6 @@ const HomePage = () => {
 
     return () => clearInterval(typingEffect);
   }, [session]);
->>>>>>> 82500d5b1c912f3f22c584e609d51cd58903dd2b
 
   const handleUploadSuccess = (questions: string[], title: string) => {
     setUploadedQuestions(questions);
@@ -47,13 +42,14 @@ const HomePage = () => {
         <h1
           className="text-5xl font-bold tracking-wider bg-clip-text text-transparent animate-gradient-flow"
           style={{
-            backgroundImage: "linear-gradient(90deg, #3a41c6, #3d3bbb, #4634a7, #4c2c96, #512888)", // Gradient combination
-            backgroundSize: "200% 200%", // Make the background larger for the flow effect
-            lineHeight: "1.2", // Ensure sufficient line height
-            paddingBottom: "0.25em", // Add some padding to avoid cutting letters
+            backgroundImage:
+              "linear-gradient(90deg, #3a41c6, #3d3bbb, #4634a7, #4c2c96, #512888)",
+            backgroundSize: "200% 200%",
+            lineHeight: "1.2",
+            paddingBottom: "0.25em",
           }}
         >
-          {fullText}
+          {text}
         </h1>
       </div>
       {session && (
@@ -75,7 +71,7 @@ const HomePage = () => {
         isOpen={uploadedQuestions.length > 0}
         onClose={() => {
           setUploadedQuestions([]);
-          setUploadedTitle('');
+          setUploadedTitle("");
         }}
         initialSuggestedQueries={uploadedQuestions}
         title={uploadedTitle}
