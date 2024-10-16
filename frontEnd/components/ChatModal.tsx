@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useSession } from "next-auth/react"; // Import the useSession hook
+import { useSession } from "next-auth/react";
 import {
   Modal,
   ModalContent,
@@ -9,15 +9,8 @@ import {
   ModalFooter,
 } from "@nextui-org/modal";
 import { Button } from "@nextui-org/button";
-import { Input } from "@nextui-org/input";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { Tooltip } from "@nextui-org/tooltip";
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from "@nextui-org/dropdown";
 import ReactMarkdown from "react-markdown";
 
 interface ChatMessage {
@@ -26,48 +19,11 @@ interface ChatMessage {
   sender: "user" | "ai";
 }
 
-type ActionRequired = {
-  moreContext?: string;
-  createTask?: {
-    title: string;
-    description: string;
-  };
-  linkButton?: {
-    text: string;
-    url: string;
-  };
-  updateTask?: {
-    taskId: string;
-    changes: {
-      title?: string;
-      description?: string;
-      status?: string;
-      assignee?: string;
-    };
-  };
-  deleteTask?: {
-    taskId: string;
-    reason: string;
-  };
-  viewDiff?: {
-    commitSha: string;
-    filePath: string;
-  };
-};
-
-type AIResponse = {
-  reply: string; // Must be in Markdown
-  actionRequired?: ActionRequired;
-  suggestedQueries?: string[];
-};
-
 interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialSuggestedQueries?: string[];
 }
-
-type AIPersonality = "Helpful" | "Project Manager" | "Task Creator";
 
 const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggestedQueries = [] }) => {
   const { data: session } = useSession(); // Fetch user session
@@ -79,9 +35,9 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
   ]);
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [aiPersonality, setAiPersonality] = useState<AIPersonality>("Helpful");
   const [suggestedQueries, setSuggestedQueries] = useState<string[]>(initialSuggestedQueries);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null); // Reference to the textarea
 
   useEffect(() => {
     setSuggestedQueries(initialSuggestedQueries);
@@ -97,16 +53,10 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
       setIsTyping(true);
 
       try {
-        const response = await axios.post<{ result: AIResponse }>(
+        const response = await axios.post<{ result: any }>(
           "http://localhost:2500/collab/chat",
-          {
-            input: input,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+          { input },
+          { headers: { "Content-Type": "application/json" } }
         );
         const aiResponse = response.data.result;
 
@@ -119,10 +69,6 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
           setSuggestedQueries(aiResponse.suggestedQueries);
         }
 
-        if (aiResponse.actionRequired) {
-          console.log("Action required:", aiResponse.actionRequired);
-        }
-
         setIsTyping(false);
         if (audioRef.current) {
           audioRef.current.play();
@@ -131,14 +77,29 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
         console.error("Error sending message:", error);
         setMessages((prev) => [
           ...prev,
-          {
-            id: prev.length + 1,
-            text: "Error in communication with AI.",
-            sender: "ai",
-          },
+          { id: prev.length + 1, text: "Error in communication with AI.", sender: "ai" },
         ]);
         setIsTyping(false);
       }
+    }
+  };
+
+  const handleCopyMessage = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("Message copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy message: ", error);
+      alert("Failed to copy message.");
+    }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"; // Reset the height
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set the new height based on scrollHeight
     }
   };
 
@@ -154,21 +115,6 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
           <span>Chat with AI Assistant</span>
-          <Dropdown>
-            <DropdownTrigger>
-              <Button>{aiPersonality} AI</Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="AI Personality"
-              onAction={(key) => setAiPersonality(key as AIPersonality)}
-            >
-              <DropdownItem key="Helpful">Helpful AI</DropdownItem>
-              <DropdownItem key="Project Manager">
-                Project Manager
-              </DropdownItem>
-              <DropdownItem key="Task Creator">Task Creator</DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
         </ModalHeader>
         <ModalBody>
           <ScrollShadow className="h-[400px]" id="chat-container">
@@ -180,7 +126,6 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
                 <div
                   className={`flex items-start ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
                 >
-                  {/* Display first letter of user or AI's initials */}
                   {msg.sender === "user" ? (
                     <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
                       {userInitial}
@@ -190,14 +135,12 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
                       {"A"} {/* AI's initial */}
                     </div>
                   )}
-                  
+
                   <Tooltip content="Click to copy" placement="bottom">
                     <div
                       onClick={() => handleCopyMessage(msg.text)}
                       className={`mx-2 p-2 rounded-lg cursor-pointer ${
-                        msg.sender === "user"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200 text-black"
+                        msg.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
                       }`}
                     >
                       {msg.sender === "ai" ? (
@@ -222,12 +165,14 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
         </ModalBody>
         <ModalFooter>
           <div className="w-full flex flex-col">
-            <Input
-              fullWidth
-              placeholder="Type your message..."
+            <textarea
+              ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSend()}
+              onChange={handleTextareaChange}
+              placeholder="Type your message..."
+              rows={1}
+              className="w-full p-2 border rounded resize-none max-h-40 overflow-hidden" // Custom styling to disable resize and limit max height
+              style={{ height: "auto" }} // Make sure height is auto initially
               maxLength={500}
             />
             <div className="flex justify-between items-center mt-2">
