@@ -28,14 +28,16 @@ const NavigationBar = () => {
       name: "Home",
       href: "/",
     },
+
     {
-      name: "Collaborative",
-      href: "/Collaborative",
-    },
-    {
-      name: "Auto Config",
+      name: "Browse History",
       href: "/config",
     },
+    {
+      name: "About Us",
+      href: "/about",
+    },
+   
   ];
 
   const handleLoginClick = () => {
@@ -58,26 +60,15 @@ const NavigationBar = () => {
         isMenuOpen={isMenuOpen}
         onMenuOpenChange={setIsMenuOpen}
       >
-        <NavbarContent className="sm:hidden" justify="start">
-          <NavbarMenuToggle
-            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          />
-        </NavbarContent>
-
-        <NavbarContent className="sm:hidden pr-3" justify="center">
+        {/* Align left - PDF Reader */}
+        <NavbarContent justify="start">
           <NavbarBrand>
-            <p className="font-bold text-inherit gradient-text">
-              Experimental by SshGurkiratSingh
-            </p>
+            <p className="font-bold text-inherit gradient-text">PDF Reader</p>
           </NavbarBrand>
         </NavbarContent>
 
+        {/* Center the menu items */}
         <NavbarContent className="hidden sm:flex gap-4" justify="center">
-          <NavbarBrand>
-            <p className="font-bold text-inherit gradient-text">
-              Experimental by SshGurkiratSingh
-            </p>
-          </NavbarBrand>
           {items.map((item, index) => (
             <NavbarItem key={`${item}-${index}`}>
               <Link color="foreground" href={item.href}>
@@ -87,7 +78,10 @@ const NavigationBar = () => {
               </Link>
             </NavbarItem>
           ))}
+        </NavbarContent>
 
+        {/* Align right - Login, Sign Up, and ThemeSwitch */}
+        <NavbarContent justify="end">
           <NavbarItem>
             <ThemeSwitch />
           </NavbarItem>
@@ -128,8 +122,8 @@ const NavigationBar = () => {
                   index === 2
                     ? "warning"
                     : index === items.length - 1
-                      ? "danger"
-                      : "foreground"
+                    ? "danger"
+                    : "foreground"
                 }
                 href={item.href}
               >
