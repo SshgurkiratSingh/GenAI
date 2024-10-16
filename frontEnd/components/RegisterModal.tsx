@@ -12,6 +12,7 @@ import {
 import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
 import { toast } from "react-toastify";
+import { MdVisibility, MdVisibilityOff } from 'react-icons/md'; // Importing visibility icons
 
 interface RegisterModalProps {
   visible: boolean;
@@ -26,6 +27,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false); // State for toggling password visibility
 
   const {
     register,
@@ -91,7 +93,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
   return (
     <>
       {visible && (
-        <Modal isOpen={visible} onOpenChange={onClose} >
+        <Modal isOpen={visible} onOpenChange={onClose}>
           <ModalContent>
             <ModalHeader>
               <h1>Create an Account</h1>
@@ -134,25 +136,44 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
                 </span>
               )}
 
-              <Input
-                fullWidth
-                type="password"
-                color={errors.password ? "danger" : "primary"}
-                size="lg"
-                placeholder="Password"
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: {
-                    value: 8,
-                    message: "Password must be at least 8 characters long",
-                  },
-                })}
-              />
-              {errors.password && (
-                <span style={{ color: "red" }}>
-                  {errors.password.message as string}
-                </span>
-              )}
+              <div style={{ marginTop: '10px', position: 'relative' }}>
+                <Input
+                  fullWidth
+                  type={showPassword ? "text" : "password"} // Toggle between text and password
+                  color={errors.password ? "danger" : "primary"}
+                  size="lg"
+                  placeholder="Password"
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 8,
+                      message: "Password must be at least 8 characters long",
+                    },
+                  })}
+                />
+                {errors.password && (
+                  <span style={{ color: "red" }}>
+                    {errors.password.message as string}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)} // Toggle password visibility
+                  style={{
+                    cursor: "pointer",
+                    position: "absolute",
+                    right: '10px',
+                    top: '50%', // Center vertically
+                    transform: 'translateY(-50%)', // Adjust for centering
+                    background: 'transparent', // Make background transparent
+                    border: 'none', // Remove button border
+                    padding: 0, // Remove padding
+                    outline: 'none' // Remove outline
+                  }}
+                >
+                  {showPassword ? <MdVisibilityOff /> : <MdVisibility />} {/* Icons for visibility */}
+                </button>
+              </div>
 
               <div style={{ marginTop: "5px" }}>
                 Password strength: {passwordStrength}

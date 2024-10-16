@@ -14,6 +14,7 @@ import {
 } from "@nextui-org/modal";
 import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
+import { MdVisibility, MdVisibilityOff } from 'react-icons/md'; // Correctly imported Material Design icons
 
 interface LoginModalProps {
   visible: boolean;
@@ -28,6 +29,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
 }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false); // State to toggle password visibility
 
   const {
     register,
@@ -89,9 +91,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
                       </span>
                     )}
                   </div>
-                  <div style={{ marginTop: '10px' }}>
+                  <div style={{ marginTop: '10px', position: 'relative' }}>
                     <Input
-                      type="password"
+                      type={showPassword ? "text" : "password"} // Toggle between text and password
                       color={errors.password ? "danger" : "primary"}
                       size="lg"
                       placeholder="Password"
@@ -108,6 +110,23 @@ const LoginModal: React.FC<LoginModalProps> = ({
                         {errors.password.message as string}
                       </span>
                     )}
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(prev => !prev)} // Toggle password visibility
+                      style={{
+                        cursor: "pointer",
+                        position: "absolute",
+                        right: '10px',
+                        top: '50%', // Center vertically
+                        transform: 'translateY(-50%)', // Adjust for centering
+                        background: 'transparent', // Make background transparent
+                        border: 'none', // Remove button border
+                        padding: 0, // Remove padding
+                        outline: 'none' // Remove outline
+                      }}
+                    >
+                      {showPassword ? <MdVisibilityOff /> : <MdVisibility />} {/* Icons for visibility */}
+                    </button>
                   </div>
                 </ModalBody>
                 <ModalFooter>
