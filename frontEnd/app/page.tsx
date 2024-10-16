@@ -1,39 +1,50 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useSession } from "next-auth/react";
 
-const HomePage = ({ session }) => {
+const HomePage = () => {
+  const { data: session } = useSession();
   const [text, setText] = useState('');
 
   useEffect(() => {
-    const username = session?.user?.name || "User"; 
-    const fullText = `Welcome, ${username}`;
+    const username = session?.user?.name || "Login"; // Default to "Login" if no user
+    const fullText = session ? `Hello, ${username}` : `${username}`;
     let index = 0;
 
+    // Clear previous text to avoid concatenation issues
+    setText('');
+
+    // Reset the index for typing effect
+    index = 0;
+
+    // Start typing effect
     const typingEffect = setInterval(() => {
       if (index < fullText.length) {
-        setText(prev => prev + fullText.charAt(index));
+        setText((prev) => prev + fullText.charAt(index));
         index++;
       } else {
         clearInterval(typingEffect);
       }
     }, 100);
 
-    return () => clearInterval(typingEffect);
+    return () => clearInterval(typingEffect); // Cleanup interval
   }, [session]);
 
   return (
     <div className="flex flex-col h-screen justify-center items-center">
       <div className="text-center">
-        <h1 className="text-5xl font-bold tracking-wider bg-gradient-to-r from-purple-600 via-pink-500 to-blue-400 bg-clip-text text-transparent border-r-4 border-white whitespace-nowrap overflow-hidden inline-block animate-typing">
+        <h1 className="text-5xl font-bold tracking-wider bg-gradient-to-r from-purple-600 via-pink-500 to-blue-400 bg-clip-text text-transparent border-r-4 border-white whitespace-nowrap overflow-hidden inline-block">
           {text}
         </h1>
       </div>
-      <div className="mt-5">
-        <button className="px-6 py-3 text-lg font-bold text-white bg-green-500 rounded transition-transform transform hover:bg-green-600 hover:scale-105">
-          Upload
-        </button>
-      </div>
+      {session && (
+        <div className="mt-5">
+          <button className="px-6 py-3 text-lg font-bold text-white bg-green-500 rounded transition-transform transform hover:bg-green-600 hover:scale-105">
+            Upload
+          </button>
+        </div>
+      )}
     </div>
   );
 };
