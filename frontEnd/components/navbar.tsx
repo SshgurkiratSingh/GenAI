@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import {
   Navbar,
   NavbarBrand,
-  NavbarMenuToggle,
   NavbarMenuItem,
   NavbarMenu,
   NavbarContent,
@@ -28,8 +27,7 @@ const NavigationBar = () => {
       name: "Home",
       href: "/",
     },
-
-     {
+    {
       name: "Browse History",
       href: "/chat",
     },
@@ -37,16 +35,7 @@ const NavigationBar = () => {
       name: "About Us",
       href: "/about",
     },
-   
   ];
-
-  const handleLoginClick = () => {
-    setIsLoginModalOpen(true);
-  };
-
-  const handleRegisterClick = () => {
-    setIsRegisterModalOpen(true);
-  };
 
   const handleLogout = () => {
     signOut();
@@ -61,18 +50,18 @@ const NavigationBar = () => {
         onMenuOpenChange={setIsMenuOpen}
       >
         {/* Align left - PDF Reader */}
-        <NavbarContent justify="start">
+        <NavbarContent justify="start" className="mr-auto"> {/* Added mr-auto for left alignment */}
           <NavbarBrand>
             <p className="font-bold text-inherit gradient-text">PDF Reader</p>
           </NavbarBrand>
         </NavbarContent>
 
         {/* Center the menu items */}
-        <NavbarContent className="hidden sm:flex gap-4" justify="center">
+        <NavbarContent className="flex justify-center gap-4" justify="center">
           {items.map((item, index) => (
             <NavbarItem key={`${item}-${index}`}>
               <Link color="foreground" href={item.href}>
-                <Button color="primary" href="/" variant="ghost">
+                <Button color="primary" variant="ghost">
                   {item.name}
                 </Button>
               </Link>
@@ -80,9 +69,8 @@ const NavigationBar = () => {
           ))}
         </NavbarContent>
 
-        {/* Align right - Login, Sign Up, and ThemeSwitch */}
+        {/* Align right - Welcome Message and Logout */}
         <NavbarContent justify="end">
-          
           {session ? (
             <>
               <NavbarItem>
@@ -94,20 +82,7 @@ const NavigationBar = () => {
                 </Button>
               </NavbarItem>
             </>
-          ) : (
-            <>
-              <NavbarItem>
-                <Button color="primary" onClick={handleLoginClick}>
-                  Login
-                </Button>
-              </NavbarItem>
-              <NavbarItem>
-                <Button color="secondary" onClick={handleRegisterClick}>
-                  Sign Up
-                </Button>
-              </NavbarItem>
-            </>
-          )}
+          ) : null /* Remove Login and Sign Up buttons */ }
         </NavbarContent>
 
         <NavbarMenu>

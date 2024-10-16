@@ -19,12 +19,19 @@ interface ReportResponse {
   message: string;
   llm: LLM;
   processingTime: string; // or number if you want to represent it in ms
+  fileName: string;
+  userEmail: string;
 }
 
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadSuccess: (response: string[], title: string) => void;
+  onUploadSuccess: (
+    response: string[],
+    title: string,
+    fileName: string,
+    processingTime: string
+  ) => void;
 }
 
 export default function UploadModal({
@@ -79,7 +86,12 @@ export default function UploadModal({
       }
 
       const result: ReportResponse = await response.json();
-      onUploadSuccess(result.llm.questions, result.llm.title);
+      onUploadSuccess(
+        result.llm.questions,
+        result.llm.title,
+        result.fileName,
+        result.processingTime
+      );
       onClose();
     } catch (error) {
       console.error("Error uploading file:", error);

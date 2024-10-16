@@ -1,72 +1,41 @@
-/* global.css */
-
 @import './animations.css'; /* Ensure this is correct */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Gradient background for the entire page */
-html, body {
-  height: 100%; /* Ensure it covers full height */
-}
-
-body {
-  background: linear-gradient(135deg, #ff7300, #f80707, #8d20b8, #ff00f2);
-  background-size: 400% 400%;
-  animation: gradientBackgroundAnimation 20s ease infinite; /* Slower animation speed */
-  min-height: 100vh; /* Ensures full height even with less content */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0; /* Remove default margin to ensure no gaps */
-  padding: 0; /* Remove padding for a full-page effect */
- 
-}
-
-/* Animation for gradient background */
-@keyframes gradientBackgroundAnimation {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* Glassmorphism effect for containers */
-.glassmorphism {
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 2rem;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-}
-
-/* Gradient animated text for headings */
 .gradient-text {
-  background: -webkit-linear-gradient(45deg, #00f5ff, #ff00cc, #ff7300);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-size: 200% 200%; /* Make it large so the gradient flows */
-  animation: gradientTextAnimation 20s ease infinite; /* Slower animation */
+    background: -webkit-linear-gradient(27deg,#4014df, #c22323, #4014df, #00c0ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%; /* To allow movement */
+    animation: gradientAnimation 4s ease-in-out infinite;
 }
-
-@keyframes gradientTextAnimation {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 100% 50%;
-  }
+body {
+    /* background: linear-gradient(150deg, rgba(136, 15, 15, 0.801) , rgba(117, 50, 138, 0.603), rgba(30, 83, 153, 0.74) ); */
 }
-
-/* Animation for glassmorphism */
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+.gradient-text2 {
+    background: -webkit-linear-gradient(27deg,#51ff00, #00ccff, #eeff00, #ff00f2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%; /* To allow movement */
+    animation: gradientAnimation 4s ease-in-out infinite;
+}.gradient-text3 {
+    background: -webkit-linear-gradient(27deg,#ff7300, #f80707, #8d20b8, #ff00f2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%; /* To allow movement */
+    animation: gradientAnimation 4s ease-in-out infinite;
+}
 @keyframes gradient-flow {
   0% {
     background-position: 0% 50%;
@@ -79,284 +48,275 @@ body {
 .animate-gradient-flow {
   background: linear-gradient(90deg, #3a41c6, #3d3bbb, #4634a7, #4c2c96, #512888); /* Custom gradient */
   background-size: 200% 200%; /* Make it large so the gradient flows */
-  animation: gradient-flow 20s ease-in-out infinite; /* Slower animation */
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  animation: gradient-flow 3s ease-in-out infinite; /* Animate over 3 seconds, looping infinitely */
+  background-clip: text; /* Apply the gradient only to the text */
+  -webkit-background-clip: text; /* Ensure compatibility with WebKit browsers */
+  color: transparent; /* Make the text transparent to show the gradient */
 }
-
-/* Loader styles */
+/* From Uiverse.io by Li-Deheng */ 
 .loader {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  --color: hsl(0, 0%, 87%);
-  --animation: 2s ease-in-out infinite;
-}
-
-.loader .circle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  width: 20px;
-  height: 20px;
-  border: solid 2px var(--color);
-  border-radius: 50%;
-  margin: 0 10px;
-  background-color: transparent;
-  animation: circle-keys var(--animation);
-}
-
-.loader .circle .dot {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-color: var(--color);
-  animation: dot-keys var(--animation);
-}
-
-.loader .circle .outline {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  animation: outline-keys var(--animation);
-}
-
-@keyframes circle-keys {
-  0% {
-    transform: scale(1);
-    opacity: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    --color: hsl(0, 0%, 87%);
+    --animation: 2s ease-in-out infinite;
   }
-  50% {
-    transform: scale(1.5);
-    opacity: 0.5;
+  
+  .loader .circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    border: solid 2px var(--color);
+    border-radius: 50%;
+    margin: 0 10px;
+    background-color: transparent;
+    animation: circle-keys var(--animation);
   }
-  100% {
-    transform: scale(1);
-    opacity: 1;
+  
+  .loader .circle .dot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--color);
+    animation: dot-keys var(--animation);
   }
-}
-
-@keyframes dot-keys {
-  0% {
-    transform: scale(1);
+  
+  .loader .circle .outline {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    animation: outline-keys var(--animation);
   }
-  50% {
-    transform: scale(0);
+  
+  .circle:nth-child(2) {
+    animation-delay: 0.3s;
   }
-  100% {
-    transform: scale(1);
+  
+  .circle:nth-child(3) {
+    animation-delay: 0.6s;
   }
-}
-
-@keyframes outline-keys {
-  0% {
-    transform: scale(0);
-    outline: solid 20px var(--color);
-    outline-offset: 0;
-    opacity: 1;
+  
+  .circle:nth-child(4) {
+    animation-delay: 0.9s;
   }
-  100% {
-    transform: scale(1);
-    outline: solid 0 transparent;
-    outline-offset: 20px;
-    opacity: 0;
+  
+  .circle:nth-child(5) {
+    animation-delay: 1.2s;
   }
-}
-
-/* Container styles for sections */
-.container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #0070f3;
-}
-
-.subtitle {
-  font-size: 1.25rem;
-  color: #555;
-}
-
-/* Section styles */
-.section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 3rem;
-  padding: 2rem;
-  border-radius: 10px;
-}
-
-.section-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 1.5rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.section-title:hover {
-  color: #0070f3;
-}
-
-.center {
-  text-align: center;
-}
-
-.section-text {
-  flex: 1;
-  padding-right: 1.5rem;
-}
-
-.section-image {
-  flex: 1;
-  text-align: center;
-}
-
-.section-image img {
-  width: 100%;
-  height: 100%;
-  max-width: 400px;
-  object-fit: cover;
-  border-radius: 10px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.section-image img:hover {
-  transform: scale(1.1);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Icon styles */
-.icon {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
-}
-
-/* Features container styles */
-.features-container {
-  display: flex;
-  justify-content: space-between;
-}
-
-.feature-card {
-  text-align: center;
-  flex: 1;
-  margin: 2rem;
-  padding: 1.5rem;
-  border: 1px solid #eaeaea;
-  border-radius: 10px;
-  width: 150px;
-}
-
-.feature-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-}
-
-/* Feature title and description */
-.feature-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  color: #0070f3;
-}
-
-.feature-description {
-  font-size: 1rem;
-  color: #666;
-  margin-bottom: 1rem;
-}
-
-/* Footer styling */
-.footer {
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  text-align: center;
-  padding: 1rem;
-  border-radius: 10px;
-  margin-top: 2rem;
-}
-
-.footer p {
-  margin: 0.5rem 0;
-}
-
-.footer a {
-  color: #0070f3;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.footer a:hover {
-  color: #ff00cc;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .section {
-    flex-direction: column;
-    padding: 1rem;
+  
+  .circle:nth-child(2) .dot {
+    animation-delay: 0.3s;
+  }
+  
+  .circle:nth-child(3) .dot {
+    animation-delay: 0.6s;
+  }
+  
+  .circle:nth-child(4) .dot {
+    animation-delay: 0.9s;
+  }
+  
+  .circle:nth-child(5) .dot {
+    animation-delay: 1.2s;
+  }
+  
+  .circle:nth-child(1) .outline {
+    animation-delay: 0.9s;
+  }
+  
+  .circle:nth-child(2) .outline {
+    animation-delay: 1.2s;
+  }
+  
+  .circle:nth-child(3) .outline {
+    animation-delay: 1.5s;
+  }
+  
+  .circle:nth-child(4) .outline {
+    animation-delay: 1.8s;
+  }
+  
+  .circle:nth-child(5) .outline {
+    animation-delay: 2.1s;
+  }
+  
+  @keyframes circle-keys {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  
+    50% {
+      transform: scale(1.5);
+      opacity: 0.5;
+    }
+  
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes dot-keys {
+    0% {
+      transform: scale(1);
+    }
+  
+    50% {
+      transform: scale(0);
+    }
+  
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes outline-keys {
+    0% {
+      transform: scale(0);
+      outline: solid 20px var(--color);
+      outline-offset: 0;
+      opacity: 1;
+    }
+  
+    100% {
+      transform: scale(1);
+      outline: solid 0 transparent;
+      outline-offset: 20px;
+      opacity: 0;
+    }
   }
 
-  .section-text {
-    padding-right: 0;
-    margin-bottom: 1.5rem;
+  .container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
   }
-
-  .features-container {
-    flex-direction: column;
-  }
-
-  .feature-card {
+  .header {
+    text-align: center;
     margin-bottom: 2rem;
   }
-
-  .feature-title {
-    font-size: 1.25rem;
-  }
-
-  .feature-description {
-    font-size: 0.875rem;
-  }
-}
-
-@media (max-width: 480px) {
   .title {
-    font-size: 2rem; /* Smaller title for very small screens */
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #0070f3;
+  }
+  .subtitle {
+    font-size: 1.25rem;
+    color: #555;
+  }
+  .section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    padding: 2rem; /* Added padding to give some breathing room */
+    
+    border-radius: 10px; /* Rounded corners */
+   
   }
 
+  
   .section-title {
-    font-size: 1.75rem;
-  }
+    font-size: 2.5rem; /* Slightly increased font size for emphasis */
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1.5rem;
+    letter-spacing: 1px; /* Add letter spacing for readability */
+    text-transform: uppercase; /* Make the title all caps for impact */
 
+  }
+  
+  .section-title:hover {
+    color: #0070f3; /* Change color on hover for emphasis */
+  }
+  .center {
+    text-align: center;
+  }
+  .section-text {
+    flex: 1;
+    padding-right: 1.5rem;
+  }
+  .section-image {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .section-image img {
+    width: 100%; 
+    height: 100%; 
+    max-width: 400px; 
+    object-fit: cover; 
+    border-radius: 10px; 
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for scaling and shadow */
+  }
+  
+  .section-image img:hover {
+    transform: scale(1.1); /* Enlarge the image to 110% */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Add a shadow on hover */
+  }
+  
+  .icon {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+  }
+  .features-container {
+    display: flex;
+    justify-content: space-between;
+  }
   .feature-card {
-    padding: 1rem;
-    margin: 1rem 0;
-  }
+    text-align: center;
+    flex: 1;
+    margin: 2rem;
+    padding: 1.5rem;
+    border: 1px solid #eaeaea;
+    border-radius: 10px;
+    width: 150px;
+   
 
-  .footer {
-    padding: 0.75rem;
   }
+  .feature-card:hover {
+    transform: scale(1.05); /* Slightly enlarge the card */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Add a shadow */
 
- 
+    cursor: pointer;
+  }
+  .feature-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  .cta-section {
+    text-align: center;
+    margin-top: 2rem;
+  }
+  .cta-button {
+    background-color: #0070f3;
+    color: #fff;
+    padding: 1rem 2rem;
+    font-size: 1.25rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .cta-button:hover {
+    background-color: #005bb5;
+  }
+  .gradient-text2 {
+    background: -webkit-linear-gradient(27deg, #6a0dad, #00c0ff); /* Purple to Blue */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%; /* To allow movement */
+    animation: gradientAnimation 4s ease-in-out infinite;
 }
