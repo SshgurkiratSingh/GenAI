@@ -201,16 +201,11 @@ body {
     align-items: center;
     margin-bottom: 3rem;
     padding: 2rem; /* Added padding to give some breathing room */
-    background-color: #f9f9f9; /* Light background color for contrast */
+    
     border-radius: 10px; /* Rounded corners */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+   
   }
-  
-  .section:hover {
-    background-color: #f0f0f0; /* Change background on hover */
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); /* Deepen shadow on hover */
-  }
+
   
   .section-title {
     font-size: 2.5rem; /* Slightly increased font size for emphasis */
@@ -219,13 +214,12 @@ body {
     margin-bottom: 1.5rem;
     letter-spacing: 1px; /* Add letter spacing for readability */
     text-transform: uppercase; /* Make the title all caps for impact */
-    transition: color 0.3s ease;
+
   }
   
   .section-title:hover {
     color: #0070f3; /* Change color on hover for emphasis */
   }
-  
   .center {
     text-align: center;
   }
@@ -244,6 +238,12 @@ body {
     max-width: 400px; 
     object-fit: cover; 
     border-radius: 10px; 
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for scaling and shadow */
+  }
+  
+  .section-image img:hover {
+    transform: scale(1.1); /* Enlarge the image to 110% */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Add a shadow on hover */
   }
   
   .icon {
@@ -263,13 +263,13 @@ body {
     border: 1px solid #eaeaea;
     border-radius: 10px;
     width: 150px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+   
 
   }
   .feature-card:hover {
     transform: scale(1.05); /* Slightly enlarge the card */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Add a shadow */
-    background-color: #f0f0f0; /* Change background color on hover */
+      
     cursor: pointer;
   }
   .feature-title {
