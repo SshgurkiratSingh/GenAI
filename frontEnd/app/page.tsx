@@ -19,7 +19,7 @@ const HomePage = () => {
   useEffect(() => {
     const username = session?.user?.name || "Guest";
     const fullText = session
-      ? `Welcome, ${username}!`
+      ? `Welcome,${" "} ${username}!`
       : "Welcome to PDF Reader!";
     let index = 0;
 
