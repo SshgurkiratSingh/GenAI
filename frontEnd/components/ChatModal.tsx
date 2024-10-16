@@ -24,11 +24,16 @@ interface ChatModalProps {
   onClose: () => void;
   initialSuggestedQueries?: string[];
   title?: string;
+  fileName?: string;
 }
 
-type AIPersonality = "Helpful" | "Project Manager" | "Task Creator";
-
-const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggestedQueries = [], title = '' }) => {
+const ChatModal: React.FC<ChatModalProps> = ({
+  isOpen,
+  onClose,
+  initialSuggestedQueries = [],
+  title = "",
+  fileName = "",
+}) => {
   const { data: session } = useSession(); // Fetch user session
   const userName = session?.user?.name || "User"; // Extract user's name from session
   const userInitial = userName.charAt(0).toUpperCase(); // Get the first letter of user's name
@@ -38,7 +43,9 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
   ]);
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(initialSuggestedQueries);
+  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(
+    initialSuggestedQueries
+  );
   const audioRef = useRef<HTMLAudioElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null); // Reference to the textarea
 
@@ -80,7 +87,11 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
         console.error("Error sending message:", error);
         setMessages((prev) => [
           ...prev,
-          { id: prev.length + 1, text: "Error in communication with AI.", sender: "ai" },
+          {
+            id: prev.length + 1,
+            text: "Error in communication with AI.",
+            sender: "ai",
+          },
         ]);
         setIsTyping(false);
       }
@@ -143,7 +154,9 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
                     <div
                       onClick={() => handleCopyMessage(msg.text)}
                       className={`mx-2 p-2 rounded-lg cursor-pointer ${
-                        msg.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+                        msg.sender === "user"
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-200 text-black"
                       }`}
                     >
                       {msg.sender === "ai" ? (

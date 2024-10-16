@@ -230,6 +230,8 @@ router.post(
         message: "File processed and embeddings created successfully",
         llm: JSON.parse(questions.content),
         processingTime: `${totalTime} ms`,
+        fileName: file.originalname,
+        userEmail: userEmail,
       });
     } catch (error) {
       console.error("Error processing file:", error);
