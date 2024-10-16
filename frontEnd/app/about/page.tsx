@@ -20,7 +20,7 @@ export default function AboutPage() {
         </div>
         <div className="section-image">
           <img
-            src="/images/mission.png"
+            src="mission.jfif"
             alt="Our Mission"
             className="icon"
           />
@@ -33,7 +33,7 @@ export default function AboutPage() {
         <div className="features-container">
           <div className="feature-card">
             <img
-              src="/images/edit.png"
+              src="/edit.jpg"
               alt="Edit PDF"
               className="icon"
             />

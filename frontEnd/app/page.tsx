@@ -1,30 +1,40 @@
 "use client";
-import ClientOnly from "@/components/ClientOnly";
-import AuthForm from "../components/AuthForm";
-import getCurrentUser from "./actions/getCurrentUser";
-import { useSession } from "next-auth/react";
-type User = {
-  name: string;
-  email: string;
-};
-export default function Home() {
-  const { data: session } = useSession();
 
-  if (session) {
-    return (
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-4">
-          Welcome, {session.user.name}!
-        </h2>
-        <p className="mb-4">Email: {session.user.email}</p>
-      </div>
-    );
-  }
+import { useEffect, useState } from 'react';
+
+const HomePage = () => {
+  const [text, setText] = useState('');
+  
+  useEffect(() => {
+    const fullText = "Welcome to My Animated Home Page";
+    let index = 0;
+
+    const typingEffect = setInterval(() => {
+      if (index < fullText.length) {
+        setText(prev => prev + fullText.charAt(index));
+        index++;
+      } else {
+        clearInterval(typingEffect);
+      }
+    }, 100);
+
+    return () => clearInterval(typingEffect);
+  }, []);
+
   return (
-    <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-      <ClientOnly>
-        <div>Hi</div>
-      </ClientOnly>
-    </section>
+    <div className=" bg-black flex flex-col h-screen justify-center items-center bg-black">
+      <div className="text-center">
+        <h1 className="text-5xl font-bold tracking-wider bg-gradient-to-r from-purple-600 via-pink-500 to-blue-400 bg-clip-text text-transparent border-r-4 border-white whitespace-nowrap overflow-hidden inline-block animate-typing">
+          {text}
+        </h1>
+      </div>
+      <div className="mt-5">
+        <button className="px-6 py-3 text-lg font-bold text-white bg-green-500 rounded transition-transform transform hover:bg-green-600 hover:scale-105">
+          Upload
+        </button>
+      </div>
+    </div>
   );
-}
+};
+
+export default HomePage;
