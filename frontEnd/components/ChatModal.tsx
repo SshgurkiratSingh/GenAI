@@ -78,7 +78,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
       try {
         const response = await axios.post<AIReply>(
-          "http://localhost:2500/chat/chat",
+          "http://192.168.100.113:2500/chat/chat",
           {
             message: input,
             history: chatHistory,
