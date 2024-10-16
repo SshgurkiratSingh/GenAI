@@ -36,10 +36,13 @@ async function savePDF(file, userEmail) {
 
 // Function to preprocess and embed text
 async function preprocessAndEmbed(text) {
+  if (typeof text !== "string") {
+    console.error("Invalid input to preprocessAndEmbed:", text);
+    return "";
+  }
   const cleanedText = text
-    .replace(/\n+/g, " ")
-    .replace(/\s\s+/g, " ")
-    .replace(/[^\w\s.,-]/g, "")
+    .replace(/\n\n+/g, "\n")
+
     .toLowerCase();
 
   return cleanedText;
@@ -60,7 +63,7 @@ function labelContext(text) {
   } else if (tokens.includes("conclusion") || tokens.includes("discussion")) {
     return "Conclusion";
   } else {
-    return "General Content";
+    return "No Context";
   }
 }
 
@@ -92,19 +95,40 @@ router.post(
       const chunks = await splitter.createDocuments([pdfData.text]);
 
       // Process chunks and create documents with metadata
-      const processedDocuments = chunks.map((chunk, index) => ({
-        pageContent: preprocessAndEmbed(chunk.pageContent),
-        metadata: {
-          fileName: file.originalname,
-          userEmail: userEmail,
-          lineNumber: index + 1,
-          label: labelContext(chunk.pageContent),
-        },
-      }));
+      const processedDocuments = await Promise.all(
+        chunks.map(async (chunk, index) => {
+          const processed = await preprocessAndEmbed(chunk.pageContent);
+          if (typeof processed !== "string") {
+            console.error(`Invalid document at index ${index}:`, processed);
+          }
+          return {
+            pageContent: processed,
+            metadata: {
+              fileName: file.originalname,
+              userEmail: userEmail,
+              lineNumber: index + 1,
+              label: labelContext(chunk.pageContent),
+            },
+          };
+        })
+      );
+
+      const validDocuments = processedDocuments.filter(
+        (doc) =>
+          typeof doc.pageContent === "string" && doc.pageContent.length > 0
+      );
+
+      if (validDocuments.length !== processedDocuments.length) {
+        console.warn(
+          `Filtered out ${
+            processedDocuments.length - validDocuments.length
+          } invalid documents`
+        );
+      }
 
       // Create embeddings and store in Supabase
       await SupabaseVectorStore.fromDocuments(
-        processedDocuments,
+        validDocuments,
         new OpenAIEmbeddings({ openAIApiKey }),
         {
           client,
@@ -119,7 +143,7 @@ router.post(
       console.error("Error processing file:", error);
       res
         .status(500)
-        .json({ error: "An error occurred while  the file" });
+        .json({ error: "An error occurred while processing the file" });
     }
   }
 );
