@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
-const HomePage = () => {
+const HomePage = ({ session }) => {
   const [text, setText] = useState('');
-  
+
   useEffect(() => {
-    const fullText = "Welcome to My Animated Home Page";
+    const username = session?.user?.name || "User"; 
+    const fullText = `Welcome, ${username}`;
     let index = 0;
 
     const typingEffect = setInterval(() => {
@@ -19,7 +20,7 @@ const HomePage = () => {
     }, 100);
 
     return () => clearInterval(typingEffect);
-  }, []);
+  }, [session]);
 
   return (
     <div className="flex flex-col h-screen justify-center items-center">
@@ -29,8 +30,7 @@ const HomePage = () => {
         </h1>
       </div>
       <div className="mt-5">
-      
-        <button  className="px-6 py-3 text-lg font-bold text-white bg-green-500 rounded transition-transform transform hover:bg-green-600 hover:scale-105">
+        <button className="px-6 py-3 text-lg font-bold text-white bg-green-500 rounded transition-transform transform hover:bg-green-600 hover:scale-105">
           Upload
         </button>
       </div>

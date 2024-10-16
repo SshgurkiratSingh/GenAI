@@ -25,7 +25,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
   onLoginClick,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<number>(0);
+  const [passwordStrength, setPasswordStrength] = useState<string>("");
 
   const {
     register,
@@ -38,11 +38,38 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
 
   const password = watch("password");
 
+  // Custom password strength checker
   useEffect(() => {
     if (password) {
-      // Add password strength logic (if you have a library like zxcvbn)
-      const result = zxcvbn(password); // This assumes you have zxcvbn installed
-      setPasswordStrength(result.score);
+      const evaluatePasswordStrength = (password: string) => {
+        let strength = 0;
+        if (password.length >= 8) strength += 1; // Minimum length
+        if (/[A-Z]/.test(password)) strength += 1; // Contains uppercase letter
+        if (/[a-z]/.test(password)) strength += 1; // Contains lowercase letter
+        if (/[0-9]/.test(password)) strength += 1; // Contains a digit
+        if (/[\W]/.test(password)) strength += 1; // Contains special character
+
+        // Set corresponding strength label
+        switch (strength) {
+          case 0:
+          case 1:
+            return "Very Weak";
+          case 2:
+            return "Weak";
+          case 3:
+            return "Fair";
+          case 4:
+            return "Strong";
+          case 5:
+            return "Very Strong";
+          default:
+            return "";
+        }
+      };
+
+      setPasswordStrength(evaluatePasswordStrength(password));
+    } else {
+      setPasswordStrength(""); // Reset if no password is typed
     }
   }, [password]);
 
@@ -64,7 +91,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
   return (
     <>
       {visible && (
-        <Modal isOpen={visible} onOpenChange={onClose} isCentered={true}>
+        <Modal isOpen={visible} onOpenChange={onClose} >
           <ModalContent>
             <ModalHeader>
               <h1>Create an Account</h1>
@@ -128,18 +155,14 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
               )}
 
               <div style={{ marginTop: "5px" }}>
-                Password strength:{" "}
-                {["Very Weak", "Weak", "Fair", "Strong", "Very Strong"][passwordStrength]}
+                Password strength: {passwordStrength}
               </div>
             </ModalBody>
             <ModalFooter>
               <Button variant="faded" color="danger" onClick={onClose}>
                 Close
               </Button>
-              <Button
-                onClick={handleSubmit(onSubmit)}
-                disabled={isLoading}
-              >
+              <Button onClick={handleSubmit(onSubmit)} disabled={isLoading}>
                 Sign Up
               </Button>
             </ModalFooter>
