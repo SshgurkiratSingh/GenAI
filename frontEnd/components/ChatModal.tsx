@@ -29,6 +29,10 @@ interface ChatModalProps {
 type AIPersonality = "Helpful" | "Project Manager" | "Task Creator";
 
 const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggestedQueries = [], title = '' }) => {
+  const { data: session } = useSession(); // Fetch user session
+  const userName = session?.user?.name || "User"; // Extract user's name from session
+  const userInitial = userName.charAt(0).toUpperCase(); // Get the first letter of user's name
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
   ]);
@@ -113,34 +117,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
     <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
-<<<<<<< HEAD
-          <span>{title ? `Chat about: ${title}` : 'Chat with AI Assistant'}</span>
-          <div className="flex items-center gap-2">
-            <Dropdown>
-              <DropdownTrigger>
-                <Button>{aiPersonality} AI</Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                aria-label="AI Personality"
-                onAction={(key) => setAiPersonality(key as AIPersonality)}
-              >
-                <DropdownItem key="Helpful">Helpful AI</DropdownItem>
-                <DropdownItem key="Project Manager">
-                  Project Manager
-                </DropdownItem>
-                <DropdownItem key="Task Creator">Task Creator</DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-            <Button color="primary" onClick={handleExportChat}>
-              Export Chat
-            </Button>
-            <Button color="danger" onClick={handleClearChat}>
-              Clear Chat
-            </Button>
-          </div>
-=======
           <span>Chat with AI Assistant</span>
->>>>>>> 41fbd9116aaac8b74e6d9261f773aa9dc3ffa9a6
         </ModalHeader>
         <ModalBody>
           <ScrollShadow className="h-[400px]" id="chat-container">
