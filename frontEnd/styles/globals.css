@@ -175,3 +175,86 @@ body {
       opacity: 0;
     }
   }
+
+  .container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #0070f3;
+  }
+  .subtitle {
+    font-size: 1.25rem;
+    color: #555;
+  }
+  .section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+  }
+  .section-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  .center {
+    text-align: center;
+  }
+  .section-text {
+    flex: 1;
+    padding-right: 1.5rem;
+  }
+  .section-image {
+    flex: 1;
+    text-align: center;
+  }
+  .icon {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+  }
+  .features-container {
+    display: flex;
+    justify-content: space-between;
+  }
+  .feature-card {
+    text-align: center;
+    flex: 1;
+    margin: 0 1rem;
+    padding: 1.5rem;
+    border: 1px solid #eaeaea;
+    border-radius: 10px;
+  }
+  .feature-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  .cta-section {
+    text-align: center;
+    margin-top: 2rem;
+  }
+  .cta-button {
+    background-color: #0070f3;
+    color: #fff;
+    padding: 1rem 2rem;
+    font-size: 1.25rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .cta-button:hover {
+    background-color: #005bb5;
+  }
