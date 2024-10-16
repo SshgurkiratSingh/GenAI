@@ -82,10 +82,7 @@ const NavigationBar = () => {
 
         {/* Align right - Login, Sign Up, and ThemeSwitch */}
         <NavbarContent justify="end">
-          <NavbarItem>
-            <ThemeSwitch />
-          </NavbarItem>
-
+          
           {session ? (
             <>
               <NavbarItem>
