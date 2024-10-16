@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { motion } from "framer-motion";
+import { Card, CardBody } from "@nextui-org/card";
+
 import UploadModal from "@/components/upload";
 import ChatModal from "@/components/ChatModal";
+import { Button } from "@nextui-org/button";
 
 const HomePage = () => {
   const { data: session } = useSession();
@@ -13,8 +17,10 @@ const HomePage = () => {
   const [text, setText] = useState("");
 
   useEffect(() => {
-    const username = session?.user?.name || "Login";
-    const fullText = session ? `Hello, ${username}` : `${username}`;
+    const username = session?.user?.name || "Guest";
+    const fullText = session
+      ? `Welcome, ${username}!`
+      : "Welcome to PDF Reader!";
     let index = 0;
 
     setText(""); // Reset text to avoid concatenation issues
@@ -37,31 +43,73 @@ const HomePage = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen justify-center items-center">
-      <div className="text-center">
-        <h1
-          className="text-5xl font-bold tracking-wider bg-clip-text text-transparent animate-gradient-flow"
-          style={{
-            backgroundImage:
-              "linear-gradient(90deg, #3a41c6, #3d3bbb, #4634a7, #4c2c96, #512888)",
-            backgroundSize: "200% 200%",
-            lineHeight: "1.2",
-            paddingBottom: "0.25em",
-          }}
-        >
-          {text}
-        </h1>
-      </div>
-      {session && (
-        <div className="mt-5">
-          <button
-            className="px-6 py-3 text-lg font-bold text-white bg-green-500 rounded transition-transform transform hover:bg-green-600 hover:scale-105"
-            onClick={() => setIsUploadModalOpen(true)}
+    <div className="min-h-screen bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 animate-gradient-x flex items-center justify-center">
+      <Card className="w-full max-w-3xl bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg">
+        <CardBody>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            Upload
-          </button>
-        </div>
-      )}
+            <h1 className="text-center text-6xl font-extrabold tracking-wider text-white mb-6 animate-pulse">
+              {text}
+            </h1>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <h1 className="text-center text-xl text-white mb-8">
+              Unlock the power of your PDFs with AI-driven insights and
+              analysis.
+            </h1>
+          </motion.div>
+          <div>
+            {session ? (
+              <div className="flex justify-center space-x-4">
+                <Button
+                  color="success"
+                  className="px-8 py-6 text-lg font-bold"
+                  onClick={() => setIsUploadModalOpen(true)}
+                >
+                  Upload PDF
+                </Button>
+                <Button
+                  color="primary"
+                  className="px-8 py-6 text-lg font-bold"
+                  onClick={() => {
+                    /* Add functionality */
+                  }}
+                >
+                  Browse History
+                </Button>
+              </div>
+            ) : (
+              <div className="flex justify-center space-x-4">
+                <Button
+                  color="primary"
+                  className="px-8 py-6 text-lg font-bold"
+                  onClick={() => {
+                    /* Add login functionality */
+                  }}
+                >
+                  Login
+                </Button>
+                <Button
+                  color="secondary"
+                  className="px-8 py-6 text-lg font-bold"
+                  onClick={() => {
+                    /* Add signup functionality */
+                  }}
+                >
+                  Sign Up
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardBody>
+      </Card>
       <UploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
