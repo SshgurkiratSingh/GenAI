@@ -1,7 +1,7 @@
 "use client"; // Add this at the top
 
 import React from "react";
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react";
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/table";
 import Link from "next/link"; 
 
 const ExampleTable = () => {
