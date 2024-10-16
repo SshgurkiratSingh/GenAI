@@ -37,6 +37,23 @@ body {
     background-size: 200% 200%; /* To allow movement */
     animation: gradientAnimation 4s ease-in-out infinite;
 }
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-flow {
+  background: linear-gradient(90deg, #3a41c6, #3d3bbb, #4634a7, #4c2c96, #512888); /* Custom gradient */
+  background-size: 200% 200%; /* Make it large so the gradient flows */
+  animation: gradient-flow 3s ease-in-out infinite; /* Animate over 3 seconds, looping infinitely */
+  background-clip: text; /* Apply the gradient only to the text */
+  -webkit-background-clip: text; /* Ensure compatibility with WebKit browsers */
+  color: transparent; /* Make the text transparent to show the gradient */
+}
 /* From Uiverse.io by Li-Deheng */ 
 .loader {
     display: flex;
