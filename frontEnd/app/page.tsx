@@ -37,17 +37,10 @@ const HomePage = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen justify-center items-center">
+    <div className="flex flex-col h-screen justify-center items-center glassmorphism">
       <div className="text-center">
         <h1
-          className="text-5xl font-bold tracking-wider bg-clip-text text-transparent animate-gradient-flow"
-          style={{
-            backgroundImage:
-              "linear-gradient(90deg, #3a41c6, #3d3bbb, #4634a7, #4c2c96, #512888)",
-            backgroundSize: "200% 200%",
-            lineHeight: "1.2",
-            paddingBottom: "0.25em",
-          }}
+          className="text-5xl font-bold tracking-wider gradient-text"
         >
           {text}
         </h1>
