@@ -7,14 +7,21 @@
 @tailwind utilities;
 
 /* Gradient background for the entire page */
+html, body {
+  height: 100%; /* Ensure it covers full height */
+}
+
 body {
-  background: linear-gradient(135deg, rgba(255, 0, 150, 0.6), rgba(0, 204, 255, 0.6), rgba(144, 104, 255, 0.6));
+  background: linear-gradient(135deg, #ff7300, #f80707, #8d20b8, #ff00f2);
   background-size: 400% 400%;
-  animation: gradientBackgroundAnimation 15s ease infinite;
-  min-height: 100vh; /* Ensure it covers full height */
+  animation: gradientBackgroundAnimation 20s ease infinite; /* Slower animation speed */
+  min-height: 100vh; /* Ensures full height even with less content */
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: 0; /* Remove default margin to ensure no gaps */
+  padding: 0; /* Remove padding for a full-page effect */
+ 
 }
 
 /* Animation for gradient background */
@@ -47,7 +54,7 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-size: 200% 200%; /* Make it large so the gradient flows */
-  animation: gradientTextAnimation 3s ease-in-out infinite; /* Animate over 3 seconds, looping infinitely */
+  animation: gradientTextAnimation 20s ease infinite; /* Slower animation */
 }
 
 @keyframes gradientTextAnimation {
@@ -72,13 +79,13 @@ body {
 .animate-gradient-flow {
   background: linear-gradient(90deg, #3a41c6, #3d3bbb, #4634a7, #4c2c96, #512888); /* Custom gradient */
   background-size: 200% 200%; /* Make it large so the gradient flows */
-  animation: gradient-flow 3s ease-in-out infinite; /* Animate over 3 seconds, looping infinitely */
-  background-clip: text; /* Apply the gradient only to the text */
-  -webkit-background-clip: text; /* Ensure compatibility with WebKit browsers */
-  color: transparent; /* Make the text transparent to show the gradient */
+  animation: gradient-flow 20s ease-in-out infinite; /* Slower animation */
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
-/* From Uiverse.io by Li-Deheng */
+/* Loader styles */
 .loader {
   display: flex;
   justify-content: center;
@@ -120,69 +127,15 @@ body {
   animation: outline-keys var(--animation);
 }
 
-.circle:nth-child(2) {
-  animation-delay: 0.3s;
-}
-
-.circle:nth-child(3) {
-  animation-delay: 0.6s;
-}
-
-.circle:nth-child(4) {
-  animation-delay: 0.9s;
-}
-
-.circle:nth-child(5) {
-  animation-delay: 1.2s;
-}
-
-.circle:nth-child(2) .dot {
-  animation-delay: 0.3s;
-}
-
-.circle:nth-child(3) .dot {
-  animation-delay: 0.6s;
-}
-
-.circle:nth-child(4) .dot {
-  animation-delay: 0.9s;
-}
-
-.circle:nth-child(5) .dot {
-  animation-delay: 1.2s;
-}
-
-.circle:nth-child(1) .outline {
-  animation-delay: 0.9s;
-}
-
-.circle:nth-child(2) .outline {
-  animation-delay: 1.2s;
-}
-
-.circle:nth-child(3) .outline {
-  animation-delay: 1.5s;
-}
-
-.circle:nth-child(4) .outline {
-  animation-delay: 1.8s;
-}
-
-.circle:nth-child(5) .outline {
-  animation-delay: 2.1s;
-}
-
 @keyframes circle-keys {
   0% {
     transform: scale(1);
     opacity: 1;
   }
-
   50% {
     transform: scale(1.5);
     opacity: 0.5;
   }
-
   100% {
     transform: scale(1);
     opacity: 1;
@@ -193,11 +146,9 @@ body {
   0% {
     transform: scale(1);
   }
-
   50% {
     transform: scale(0);
   }
-
   100% {
     transform: scale(1);
   }
@@ -210,7 +161,6 @@ body {
     outline-offset: 0;
     opacity: 1;
   }
-
   100% {
     transform: scale(1);
     outline: solid 0 transparent;
@@ -243,26 +193,27 @@ body {
   color: #555;
 }
 
+/* Section styles */
 .section {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 3rem;
-  padding: 2rem; /* Added padding to give some breathing room */
-  border-radius: 10px; /* Rounded corners */
+  padding: 2rem;
+  border-radius: 10px;
 }
 
 .section-title {
-  font-size: 2.5rem; /* Slightly increased font size for emphasis */
+  font-size: 2.5rem;
   font-weight: bold;
   color: #333;
   margin-bottom: 1.5rem;
-  letter-spacing: 1px; /* Add letter spacing for readability */
-  text-transform: uppercase; /* Make the title all caps for impact */
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .section-title:hover {
-  color: #0070f3; /* Change color on hover for emphasis */
+  color: #0070f3;
 }
 
 .center {
@@ -285,20 +236,22 @@ body {
   max-width: 400px;
   object-fit: cover;
   border-radius: 10px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for scaling and shadow */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .section-image img:hover {
-  transform: scale(1.1); /* Enlarge the image to 110% */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Add a shadow on hover */
+  transform: scale(1.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* Icon styles */
 .icon {
   width: 80px;
   height: 80px;
   object-fit: contain;
 }
 
+/* Features container styles */
 .features-container {
   display: flex;
   justify-content: space-between;
@@ -315,36 +268,33 @@ body {
 }
 
 .feature-card:hover {
-  transform: scale(1.05); /* Slightly enlarge the card */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Add a shadow */
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   cursor: pointer;
 }
 
-/* Continue from where we left off */
-
-/* Feature title styling */
+/* Feature title and description */
 .feature-title {
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
-  color: #0070f3; /* Matching accent color for headings */
+  color: #0070f3;
 }
 
-/* Feature description styling */
 .feature-description {
   font-size: 1rem;
-  color: #666; /* Lighter color for text */
+  color: #666;
   margin-bottom: 1rem;
 }
 
 /* Footer styling */
 .footer {
-  background-color: rgba(0, 0, 0, 0.7); /* Transparent dark background */
+  background-color: rgba(0, 0, 0, 0.7);
   color: white;
   text-align: center;
   padding: 1rem;
-  border-radius: 10px; /* Rounded corners */
-  margin-top: 2rem; /* Space at the bottom */
+  border-radius: 10px;
+  margin-top: 2rem;
 }
 
 .footer p {
@@ -358,13 +308,13 @@ body {
 }
 
 .footer a:hover {
-  color: #ff00cc; /* Hover effect for footer links */
+  color: #ff00cc;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
   .section {
-    flex-direction: column; /* Stack items vertically on small screens */
+    flex-direction: column;
     padding: 1rem;
   }
 
@@ -382,11 +332,11 @@ body {
   }
 
   .feature-title {
-    font-size: 1.25rem; /* Slightly reduce font size */
+    font-size: 1.25rem;
   }
 
   .feature-description {
-    font-size: 0.875rem; /* Reduce font size for better readability */
+    font-size: 0.875rem;
   }
 }
 
@@ -407,4 +357,6 @@ body {
   .footer {
     padding: 0.75rem;
   }
+
+ 
 }

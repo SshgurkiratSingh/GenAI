@@ -38,10 +38,8 @@ const HomePage = () => {
 
   return (
     <div className="flex flex-col h-screen justify-center items-center glassmorphism">
-      <div className="text-center">
-        <h1
-          className="text-5xl font-bold tracking-wider gradient-text"
-        >
+      <div className="text-center w-full h-full flex flex-col justify-center items-center">
+        <h1 className="text-5xl font-bold tracking-wider gradient-text">
           {text}
         </h1>
       </div>

@@ -44,7 +44,7 @@ export default function RootLayout({
             <ToastContainer closeOnClick stacked theme="dark" />
             <div className="relative flex flex-col h-screen">
               <NavigationBar />
-              <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
+              <main className="flex-grow">
                 {children}
               </main>
             </div>
