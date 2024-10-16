@@ -126,7 +126,7 @@ router.post(
     const startTime = Date.now(); // For performance tracking
 
     try {
-      const userEmail = req.body.userEmail;
+      const userEmail = req.body.email; // Ensure this matches your frontend
       const file = req.file;
 
       if (!file) {

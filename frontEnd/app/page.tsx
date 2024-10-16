@@ -16,8 +16,12 @@ const HomePage = () => {
     const fullText = session ? `Hello, ${username}` : `${username}`;
     let index = 0;
 
+<<<<<<< HEAD
     setText('');
     index = 0;
+=======
+    setText(''); // Reset text to avoid concatenation issues
+>>>>>>> 67f66e0c17003c8f03b841069d2dc3cfe252705b
 
     const typingEffect = setInterval(() => {
       if (index < fullText.length) {
