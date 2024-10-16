@@ -29,7 +29,7 @@ const NavigationBar = () => {
       href: "/",
     },
 
-    {
+     {
       name: "Browse History",
       href: "/config",
     },
