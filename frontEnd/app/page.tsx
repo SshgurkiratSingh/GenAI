@@ -9,13 +9,36 @@ const HomePage = () => {
   const { data: session } = useSession();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadedQuestions, setUploadedQuestions] = useState<string[]>([]);
+  const [uploadedTitle, setUploadedTitle] = useState<string>('');
 
+<<<<<<< HEAD
   // Directly set the text without animation
   const username = session?.user?.name || "Login";
   const fullText = session ? `Hello, ${username}` : `${username}`;
+=======
+  useEffect(() => {
+    const username = session?.user?.name || "Login";
+    const fullText = session ? `Hello, ${username}` : `${username}`;
+    let index = 0;
 
-  const handleUploadSuccess = (questions: string[]) => {
+    setText(''); // Reset text to avoid concatenation issues
+
+    const typingEffect = setInterval(() => {
+      if (index < fullText.length) {
+        setText(prev => prev + fullText.charAt(index));
+        index++;
+      } else {
+        clearInterval(typingEffect);
+      }
+    }, 100);
+
+    return () => clearInterval(typingEffect);
+  }, [session]);
+>>>>>>> 82500d5b1c912f3f22c584e609d51cd58903dd2b
+
+  const handleUploadSuccess = (questions: string[], title: string) => {
     setUploadedQuestions(questions);
+    setUploadedTitle(title);
   };
 
   return (
@@ -50,8 +73,12 @@ const HomePage = () => {
       />
       <ChatModal
         isOpen={uploadedQuestions.length > 0}
-        onClose={() => setUploadedQuestions([])}
+        onClose={() => {
+          setUploadedQuestions([]);
+          setUploadedTitle('');
+        }}
         initialSuggestedQueries={uploadedQuestions}
+        title={uploadedTitle}
       />
     </div>
   );

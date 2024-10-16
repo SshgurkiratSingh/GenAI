@@ -8,6 +8,8 @@ import {
 } from "@nextui-org/modal";
 import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
+import { useSession } from "next-auth/react";
+
 interface LLM {
   questions: string[];
   title: string;
@@ -22,10 +24,8 @@ interface ReportResponse {
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadSuccess: (response: string[]) => void;
+  onUploadSuccess: (response: string[], title: string) => void;
 }
-
-import { useSession } from "next-auth/react";
 
 export default function UploadModal({
   isOpen,
@@ -35,47 +35,57 @@ export default function UploadModal({
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { data: session } = useSession();
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
-    if (selectedFile && selectedFile.type === "application/pdf") {
-      setFile(selectedFile);
-    } else {
-      alert("Please upload a valid PDF file.");
+    if (selectedFile) {
+      console.log("File type:", selectedFile.type); // Log the file type
+      if (selectedFile.type === "application/pdf") {
+        setFile(selectedFile);
+      } else {
+        alert("Please upload a valid PDF file.");
+      }
     }
   };
 
   const handleUpload = async () => {
-    if (file && session?.user?.email) {
-      setIsUploading(true);
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("email", session.user.email);
+    if (!file) {
+      alert("No file selected!");
+      return;
+    }
 
-        const response = await fetch(
-          "http://localhost:2500/uploadFileandGatherContext",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+    if (!session?.user?.email) {
+      alert("User not logged in!");
+      return;
+    }
 
-        if (response.ok) {
-          const result: ReportResponse = await response.json();
-          onUploadSuccess(result.llm.questions);
-          onClose();
-        } else {
-          throw new Error("Upload failed");
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("email", session.user.email);
+
+      const response = await fetch(
+        "http://192.168.1.113:2500/upload/uploadAndCreateContext",
+        {
+          method: "POST",
+          body: formData,
         }
-      } catch (error) {
-        console.error("Error uploading file:", error);
-        alert("Failed to upload file. Please try again.");
-      } finally {
-        setIsUploading(false);
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(`Upload failed: ${errorData.message || "Unknown error"}`);
+        return;
       }
-    } else {
-      alert(file ? "User not logged in!" : "No file selected!");
+
+      const result: ReportResponse = await response.json();
+      onUploadSuccess(result.llm.questions, result.llm.title);
+      onClose();
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Failed to upload file. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -87,22 +97,21 @@ export default function UploadModal({
         isOpen={isOpen}
         onOpenChange={onClose}
       >
-        {" "}
         <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>
-                <h1 id="modal-title">Upload PDF File</h1>
-              </ModalHeader>
-              <ModalBody>
-                <Input type="file" onChange={handleFileChange} accept=".pdf" />
-              </ModalBody>
-              <ModalFooter>
-                <Button onPress={onClose}>Cancel</Button>
-                <Button onPress={handleUpload}>Upload</Button>
-              </ModalFooter>
-            </>
-          )}
+          <ModalHeader>
+            <h1 id="modal-title">Upload PDF File</h1>
+          </ModalHeader>
+          <ModalBody>
+            <Input type="file" onChange={handleFileChange} accept=".pdf" />
+          </ModalBody>
+          <ModalFooter>
+            <Button onPress={onClose} disabled={isUploading}>
+              Cancel
+            </Button>
+            <Button onPress={handleUpload} disabled={isUploading}>
+              {isUploading ? "Uploading..." : "Upload"}
+            </Button>
+          </ModalFooter>
         </ModalContent>
       </Modal>
     </>

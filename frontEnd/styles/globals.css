@@ -314,3 +314,11 @@ body {
   .cta-button:hover {
     background-color: #005bb5;
   }
+  .gradient-text2 {
+    background: -webkit-linear-gradient(27deg, #6a0dad, #00c0ff); /* Purple to Blue */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%; /* To allow movement */
+    animation: gradientAnimation 4s ease-in-out infinite;
+}
+  

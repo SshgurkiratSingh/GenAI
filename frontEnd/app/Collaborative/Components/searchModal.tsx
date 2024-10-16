@@ -1,8 +1,6 @@
-"use client";
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@nextui-org/button";
-import { Divider } from "@nextui-org/divider";
-import { Input } from "@nextui-org/input";
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { useSession } from "next-auth/react"; // Import the useSession hook
 import {
   Modal,
   ModalContent,
@@ -10,147 +8,257 @@ import {
   ModalBody,
   ModalFooter,
 } from "@nextui-org/modal";
+import { Button } from "@nextui-org/button";
+import { Input } from "@nextui-org/input";
+import { ScrollShadow } from "@nextui-org/scroll-shadow";
+import { Tooltip } from "@nextui-org/tooltip";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@nextui-org/dropdown";
+import ReactMarkdown from "react-markdown";
 
-import { CommitLogEntry } from "../page";
+interface ChatMessage {
+  id: number;
+  text: string;
+  sender: "user" | "ai";
+}
 
-import { SearchIcon } from "@/components/icons";
-
-// Helper function to highlight matched string
-const highlightMatch = (text: string, query: string) => {
-  if (!query) return text;
-
-  const parts = text.split(new RegExp(`(${query})`, "gi"));
-
-  return parts.map((part, index) =>
-    part.toLowerCase() === query.toLowerCase() ? (
-      <span key={index} style={{ backgroundColor: "yellow" }}>
-        {part}
-      </span>
-    ) : (
-      part
-    ),
-  );
+type ActionRequired = {
+  moreContext?: string;
+  createTask?: {
+    title: string;
+    description: string;
+  };
+  linkButton?: {
+    text: string;
+    url: string;
+  };
+  updateTask?: {
+    taskId: string;
+    changes: {
+      title?: string;
+      description?: string;
+      status?: string;
+      assignee?: string;
+    };
+  };
+  deleteTask?: {
+    taskId: string;
+    reason: string;
+  };
+  viewDiff?: {
+    commitSha: string;
+    filePath: string;
+  };
 };
 
-export default function SearchModal({
-  setVisible,
-  visible,
-  taskHistory,
-}: {
-  setVisible: (visible: boolean) => void;
-  visible: boolean;
-  taskHistory: CommitLogEntry[];
-}) {
-  const [searchQuery, setSearchQuery] = useState(""); // State to track search input
-  const [filteredResults, setFilteredResults] = useState<CommitLogEntry[]>([]); // State for search results
-  const inputRef = useRef<HTMLInputElement>(null); // Create a ref for the input field
+type AIResponse = {
+  reply: string; // Must be in Markdown
+  actionRequired?: ActionRequired;
+  suggestedQueries?: string[];
+};
 
-  // Handle search input changes
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const query = event.target.value;
+interface ChatModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialSuggestedQueries?: string[];
+}
 
-    setSearchQuery(query);
+type AIPersonality = "Helpful" | "Project Manager" | "Task Creator";
 
-    // Filter task history based on the search query
-    if (query.trim() !== "") {
-      const results = taskHistory.filter(
-        (task) =>
-          task.user.toLowerCase().includes(query.toLowerCase()) ||
-          task.comment.toLowerCase().includes(query.toLowerCase()) ||
-          task.codeChanged.toLowerCase().includes(query.toLowerCase()) ||
-          task.generatedSummary.toLowerCase().includes(query.toLowerCase()),
-      );
+const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggestedQueries = [] }) => {
+  const { data: session } = useSession(); // Fetch user session
+  const userName = session?.user?.name || "User"; // Extract user's name from session
+  const userInitial = userName.charAt(0).toUpperCase(); // Get the first letter of user's name
 
-      setFilteredResults(results);
-    } else {
-      setFilteredResults([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
+  ]);
+  const [input, setInput] = useState<string>("");
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [aiPersonality, setAiPersonality] = useState<AIPersonality>("Helpful");
+  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(initialSuggestedQueries);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    setSuggestedQueries(initialSuggestedQueries);
+  }, [initialSuggestedQueries]);
+
+  const handleSend = async (): Promise<void> => {
+    if (input.trim()) {
+      setMessages((prev) => [
+        ...prev,
+        { id: prev.length + 1, text: input, sender: "user" },
+      ]);
+      setInput("");
+      setIsTyping(true);
+
+      try {
+        const response = await axios.post<{ result: AIResponse }>(
+          "http://localhost:2500/collab/chat",
+          {
+            input: input,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const aiResponse = response.data.result;
+
+        setMessages((prev) => [
+          ...prev,
+          { id: prev.length + 1, text: aiResponse.reply, sender: "ai" },
+        ]);
+
+        if (aiResponse.suggestedQueries) {
+          setSuggestedQueries(aiResponse.suggestedQueries);
+        }
+
+        if (aiResponse.actionRequired) {
+          console.log("Action required:", aiResponse.actionRequired);
+        }
+
+        setIsTyping(false);
+        if (audioRef.current) {
+          audioRef.current.play();
+        }
+      } catch (error) {
+        console.error("Error sending message:", error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: prev.length + 1,
+            text: "Error in communication with AI.",
+            sender: "ai",
+          },
+        ]);
+        setIsTyping(false);
+      }
     }
   };
 
-  // Clear search and focus input when the modal is visible
   useEffect(() => {
-    if (visible) {
-      setSearchQuery("");
-      setFilteredResults([]);
-      if (inputRef.current) {
-        inputRef.current.focus(); // Focus the input when the modal opens
-      }
+    const chatContainer = document.getElementById("chat-container");
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
     }
-  }, [visible]);
+  }, [messages]);
 
   return (
-    <Modal
-      backdrop="blur"
-      className="bg-transparent border-none "
-      isOpen={visible}
-      scrollBehavior={"outside"}
-      onOpenChange={setVisible}
-    >
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalContent>
-        {(onClose) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1 text-center">
-              Search History Logs, Assignments and Changes
-            </ModalHeader>
-            <ModalBody className="flex flex-col gap-1 text-center items-center ">
-              <Input
-                ref={inputRef} // Attach the ref to the input field
-                isRequired
-                className="max-w-xs"
-                placeholder="Search by user, comment, or code change"
-                startContent={
-                  <SearchIcon color="currentColor" height={20} width={20} />
-                }
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-              <Divider />
-
-              {/* Display search results */}
-              <div className="flex flex-col gap-2">
-                {filteredResults.length > 0 ? (
-                  filteredResults.map((task) => (
-                    <div key={task.id} className="p-2 border-b">
-                      <div className="text-md font-semibold">
-                        {highlightMatch(task.user, searchQuery)}:{" "}
-                        {highlightMatch(task.comment, searchQuery)}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Code Changed:{" "}
-                        {highlightMatch(task.codeChanged, searchQuery)}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Generated Summary:{" "}
-                        {highlightMatch(task.generatedSummary, searchQuery)}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {new Date(task.createdAt).toLocaleString()}
-                      </div>
-                      <a
-                        className="text-blue-500"
-                        href={task.gitCommitLink}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        View Commit
-                      </a>
+        <ModalHeader className="flex justify-between items-center">
+          <span>Chat with AI Assistant</span>
+          <Dropdown>
+            <DropdownTrigger>
+              <Button>{aiPersonality} AI</Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label="AI Personality"
+              onAction={(key) => setAiPersonality(key as AIPersonality)}
+            >
+              <DropdownItem key="Helpful">Helpful AI</DropdownItem>
+              <DropdownItem key="Project Manager">
+                Project Manager
+              </DropdownItem>
+              <DropdownItem key="Task Creator">Task Creator</DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        </ModalHeader>
+        <ModalBody>
+          <ScrollShadow className="h-[400px]" id="chat-container">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex mb-4 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`flex items-start ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
+                >
+                  {/* Display first letter of user or AI's initials */}
+                  {msg.sender === "user" ? (
+                    <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                      {userInitial}
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-red-500">No results found</p>
-                )}
+                  ) : (
+                    <div className="bg-gray-200 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                      {"A"} {/* AI's initial */}
+                    </div>
+                  )}
+                  
+                  <Tooltip content="Click to copy" placement="bottom">
+                    <div
+                      onClick={() => handleCopyMessage(msg.text)}
+                      className={`mx-2 p-2 rounded-lg cursor-pointer ${
+                        msg.sender === "user"
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-200 text-black"
+                      }`}
+                    >
+                      {msg.sender === "ai" ? (
+                        <ReactMarkdown>{msg.text}</ReactMarkdown>
+                      ) : (
+                        msg.text
+                      )}
+                    </div>
+                  </Tooltip>
+                </div>
               </div>
-
-              <Divider />
-            </ModalBody>
-            <ModalFooter className="flex flex-row gap-1 items-center justify-center">
-              <Button color="danger" variant="light" onPress={onClose}>
-                Close
+            ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="flex items-center bg-gray-200 text-black rounded-lg p-2">
+                  <span className="typing-indicator"></span>
+                  AI is typing...
+                </div>
+              </div>
+            )}
+          </ScrollShadow>
+        </ModalBody>
+        <ModalFooter>
+          <div className="w-full flex flex-col">
+            <Input
+              fullWidth
+              placeholder="Type your message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSend()}
+              maxLength={500}
+            />
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-sm text-gray-500">Max 500 characters.</span>
+              <Button color="primary" onClick={handleSend}>
+                Send
               </Button>
-            </ModalFooter>
-          </>
-        )}
+            </div>
+            {suggestedQueries.length > 0 && (
+              <div className="mt-2">
+                <p className="text-sm font-semibold">Suggested queries:</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {suggestedQueries.map((query, index) => (
+                    <Button
+                      key={index}
+                      size="sm"
+                      variant="flat"
+                      onClick={() => setInput(query)}
+                    >
+                      {query}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </ModalFooter>
       </ModalContent>
+      <audio ref={audioRef} src="/ding.mp3" preload="auto" />
     </Modal>
   );
-}
+};
+
+export default ChatModal;
