@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useSession } from "next-auth/react"; // Import the useSession hook
 import {
   Modal,
   ModalContent,
@@ -10,7 +11,6 @@ import {
 import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
-import { Avatar } from "@nextui-org/avatar";
 import { Tooltip } from "@nextui-org/tooltip";
 import {
   Dropdown,
@@ -70,6 +70,10 @@ interface ChatModalProps {
 type AIPersonality = "Helpful" | "Project Manager" | "Task Creator";
 
 const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggestedQueries = [] }) => {
+  const { data: session } = useSession(); // Fetch user session
+  const userName = session?.user?.name || "User"; // Extract user's name from session
+  const userInitial = userName.charAt(0).toUpperCase(); // Get the first letter of user's name
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
   ]);
@@ -116,7 +120,6 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
         }
 
         if (aiResponse.actionRequired) {
-          // Handle action required (you can implement this based on your needs)
           console.log("Action required:", aiResponse.actionRequired);
         }
 
@@ -139,27 +142,6 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
     }
   };
 
-  const handleClearChat = (): void => {
-    setMessages([]);
-    setSuggestedQueries([]);
-  };
-
-  const handleCopyMessage = (text: string): void => {
-    navigator.clipboard.writeText(text);
-  };
-
-  const handleExportChat = (): void => {
-    const chatContent = messages
-      .map((msg) => `${msg.sender}: ${msg.text}`)
-      .join("\n");
-    const blob = new Blob([chatContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "chat_history.txt";
-    a.click();
-  };
-
   useEffect(() => {
     const chatContainer = document.getElementById("chat-container");
     if (chatContainer) {
@@ -172,29 +154,21 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
           <span>Chat with AI Assistant</span>
-          <div className="flex items-center gap-2">
-            <Dropdown>
-              <DropdownTrigger>
-                <Button>{aiPersonality} AI</Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                aria-label="AI Personality"
-                onAction={(key) => setAiPersonality(key as AIPersonality)}
-              >
-                <DropdownItem key="Helpful">Helpful AI</DropdownItem>
-                <DropdownItem key="Project Manager">
-                  Project Manager
-                </DropdownItem>
-                <DropdownItem key="Task Creator">Task Creator</DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-            <Button color="primary" onClick={handleExportChat}>
-              Export Chat
-            </Button>
-            <Button color="danger" onClick={handleClearChat}>
-              Clear Chat
-            </Button>
-          </div>
+          <Dropdown>
+            <DropdownTrigger>
+              <Button>{aiPersonality} AI</Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label="AI Personality"
+              onAction={(key) => setAiPersonality(key as AIPersonality)}
+            >
+              <DropdownItem key="Helpful">Helpful AI</DropdownItem>
+              <DropdownItem key="Project Manager">
+                Project Manager
+              </DropdownItem>
+              <DropdownItem key="Task Creator">Task Creator</DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         </ModalHeader>
         <ModalBody>
           <ScrollShadow className="h-[400px]" id="chat-container">
@@ -206,15 +180,17 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggested
                 <div
                   className={`flex items-start ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
                 >
-                  <Avatar
-                    src={
-                      msg.sender === "user"
-                        ? "https://i.pravatar.cc/150?u=a042581f4e29026704d"
-                        : "https://i.pravatar.cc/150?u=a042581f4e29026704e"
-                    }
-                    size="sm"
-                    color={msg.sender === "user" ? "primary" : "secondary"}
-                  />
+                  {/* Display first letter of user or AI's initials */}
+                  {msg.sender === "user" ? (
+                    <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                      {userInitial}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-200 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                      {"A"} {/* AI's initial */}
+                    </div>
+                  )}
+                  
                   <Tooltip content="Click to copy" placement="bottom">
                     <div
                       onClick={() => handleCopyMessage(msg.text)}
