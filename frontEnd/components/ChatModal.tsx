@@ -64,19 +64,24 @@ type AIResponse = {
 interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialSuggestedQueries?: string[];
 }
 
 type AIPersonality = "Helpful" | "Project Manager" | "Task Creator";
 
-const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose }) => {
+const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialSuggestedQueries = [] }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
   ]);
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [aiPersonality, setAiPersonality] = useState<AIPersonality>("Helpful");
-  const [suggestedQueries, setSuggestedQueries] = useState<string[]>([]);
+  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(initialSuggestedQueries);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    setSuggestedQueries(initialSuggestedQueries);
+  }, [initialSuggestedQueries]);
 
   const handleSend = async (): Promise<void> => {
     if (input.trim()) {

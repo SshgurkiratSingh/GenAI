@@ -2,23 +2,23 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from "next-auth/react";
+import UploadModal from '@/components/upload';
+import ChatModal from '@/components/ChatModal';
 
 const HomePage = () => {
   const { data: session } = useSession();
   const [text, setText] = useState('');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadedQuestions, setUploadedQuestions] = useState<string[]>([]);
 
   useEffect(() => {
-    const username = session?.user?.name || "Login"; // Default to "Login" if no user
+    const username = session?.user?.name || "Login";
     const fullText = session ? `Hello, ${username}` : `${username}`;
     let index = 0;
 
-    // Clear previous text to avoid concatenation issues
     setText('');
-
-    // Reset the index for typing effect
     index = 0;
 
-    // Start typing effect
     const typingEffect = setInterval(() => {
       if (index < fullText.length) {
         setText((prev) => prev + fullText.charAt(index));
@@ -28,8 +28,12 @@ const HomePage = () => {
       }
     }, 100);
 
-    return () => clearInterval(typingEffect); // Cleanup interval
+    return () => clearInterval(typingEffect);
   }, [session]);
+
+  const handleUploadSuccess = (questions: string[]) => {
+    setUploadedQuestions(questions);
+  };
 
   return (
     <div className="flex flex-col h-screen justify-center items-center">
@@ -40,11 +44,24 @@ const HomePage = () => {
       </div>
       {session && (
         <div className="mt-5">
-          <button className="px-6 py-3 text-lg font-bold text-white bg-green-500 rounded transition-transform transform hover:bg-green-600 hover:scale-105">
+          <button
+            className="px-6 py-3 text-lg font-bold text-white bg-green-500 rounded transition-transform transform hover:bg-green-600 hover:scale-105"
+            onClick={() => setIsUploadModalOpen(true)}
+          >
             Upload
           </button>
         </div>
       )}
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
+      />
+      <ChatModal
+        isOpen={uploadedQuestions.length > 0}
+        onClose={() => setUploadedQuestions([])}
+        initialSuggestedQueries={uploadedQuestions}
+      />
     </div>
   );
 };
