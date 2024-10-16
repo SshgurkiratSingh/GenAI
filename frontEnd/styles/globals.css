@@ -1,4 +1,3 @@
-
 @import './animations.css'; /* Ensure this is correct */
 @tailwind base;
 @tailwind components;
@@ -321,4 +320,3 @@ body {
     background-size: 200% 200%; /* To allow movement */
     animation: gradientAnimation 4s ease-in-out infinite;
 }
-  
