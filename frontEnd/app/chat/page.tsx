@@ -21,6 +21,8 @@ import {
   ModalFooter,
 } from "@nextui-org/modal";
 import ContinueChat from "@/components/continueChat";
+import { toast } from "react-toastify";
+import { API_Point } from "@/APIConfig";
 
 // Define the structure of chat files
 interface ChatFile {
@@ -81,6 +83,12 @@ const ChatHistoryTable: React.FC = () => {
     }
   };
 
+  /*************  ✨ Codeium Command ⭐  *************/
+  /**
+   * Open the modal for the given chat file.
+   * @param {string} file The name of the chat file to open.
+   */
+  /******  9b256ab3-6901-4e18-b107-9e0fe2a5b37d  *******/
   const openModal = (file: string) => {
     setSelectedFile(file);
     setIsModalOpen(true);
@@ -103,8 +111,35 @@ const ChatHistoryTable: React.FC = () => {
 
   const confirmDelete = async () => {
     if (fileToDelete) {
-      await handleDelete(fileToDelete);
-      closeDeleteModal();
+      try {
+        const response = await fetch(`${API_Point}/deleteFile`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: session?.user.email,
+            fname: fileToDelete,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          // Notify success
+          alert(result.message);
+          // Optionally refresh the file list or update the UI
+          toast.success("File deleted successfully! Refresh to continue");
+        } else {
+          // Handle errors
+          alert(result.error || "Failed to delete the file.");
+        }
+      } catch (error) {
+        console.error("Error during file deletion:", error);
+        alert("An error occurred while deleting the file.");
+      } finally {
+        closeDeleteModal();
+      }
     }
   };
 
@@ -155,27 +190,12 @@ const ChatHistoryTable: React.FC = () => {
 
       {/* Modal for Continue Chat */}
       {selectedFile && (
-        <Modal isOpen={isModalOpen} onClose={closeModal} size="xl">
-          <ModalContent>
-            <ModalHeader>Continue Chat for {selectedFile}</ModalHeader>
-            <ModalBody>
-              <ContinueChat
-                isOpen={isModalOpen}
-                onClose={closeModal}
-                email={session?.user?.email || ""}
-                fileName={selectedFile}
-              />
-            </ModalBody>
-            <ModalFooter>
-              <button
-                onClick={closeModal}
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Close
-              </button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+        <ContinueChat
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          email={session?.user?.email || ""}
+          fileName={selectedFile}
+        />
       )}
 
       {/* Modal for Delete Confirmation */}
@@ -184,7 +204,8 @@ const ChatHistoryTable: React.FC = () => {
           <ModalContent>
             <ModalHeader>Confirm Deletion</ModalHeader>
             <ModalBody>
-              Are you sure you want to delete the chat file: <strong>{fileToDelete}</strong>?
+              Are you sure you want to delete the chat file:{" "}
+              <strong>{fileToDelete}</strong>?
             </ModalBody>
             <ModalFooter>
               <button
