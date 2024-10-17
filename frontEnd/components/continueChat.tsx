@@ -14,13 +14,14 @@ import ReactMarkdown from "react-markdown";
 
 // Define the structure for a single chat message
 interface ChatMessage {
-  question: string;
-  answer: string;
+  id: number;
+  text: string;
+  sender: "user" | "ai";
 }
 
 // Define the structure for the chat history storage
 interface ChatHistoryStore {
-  chatHistory: ChatMessage[];
+  chatHistory: string[]; // array of alternating user/ai responses
   fileName: string;
   title: string;
 }
@@ -63,13 +64,17 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
         // Parse the JSON string in the data field
         const parsedData: ChatHistoryStore = JSON.parse(response.data.data);
 
-        // Update the chat history and title state
-        setChatHistory(
-          parsedData.chatHistory.map((item) => ({
-            question: item[0],
-            answer: item[1],
-          }))
+        // Map the fetched history to align with ChatModal format
+        const mappedChatHistory: ChatMessage[] = parsedData.chatHistory.map(
+          (message, index) => ({
+            id: index + 1,
+            text: message,
+            sender: index % 2 === 0 ? "user" : "ai", // Ensure sender is either "user" or "ai"
+          })
         );
+
+        // Update the chat history and title state
+        setChatHistory(mappedChatHistory);
         setTitle(parsedData.title);
         setLoading(false);
       } catch (error) {
@@ -98,54 +103,77 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
   }, [chatHistory, newMessage]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
-      <ModalContent>
-        <ModalHeader className="flex justify-between items-center">
-          <span>{title || fileName || "Continue Chat"}</span>
-        </ModalHeader>
-        <ModalBody>
-          <ScrollShadow
-            className="h-[400px] overflow-y-auto"
-            id="continue-chat-container"
-          >
-            {loading ? (
-              <div>Loading chat history...</div>
-            ) : !chatHistory || chatHistory.length === 0 ? (
-              <div>No chat history available.</div>
-            ) : (
-              chatHistory.map((msg, index) => (
-                <div key={index} className="mb-4">
-                  <div className="flex justify-start">
-                    <div className="bg-gray-200 p-2 rounded-lg">
-                      <strong>User:</strong> {msg.question}
-                    </div>
-                  </div>
-                  <div className="flex justify-start mt-2">
-                    <Tooltip content="Click to copy" placement="bottom">
-                      <div
-                        className="bg-blue-500 text-white p-2 rounded-lg cursor-pointer"
-                        onClick={() =>
-                          navigator.clipboard.writeText(msg.answer)
-                        }
-                      >
-                        <strong>AI:</strong>{" "}
-                        <ReactMarkdown>{msg.answer}</ReactMarkdown>
+    <>
+      <Modal isOpen={isOpen} onOpenChange={onClose}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex justify-between items-center">
+                <span>{title || fileName || "Continue Chat"}</span>
+              </ModalHeader>
+              <ModalBody>
+                <ScrollShadow
+                  className="h-[400px] overflow-y-auto"
+                  id="continue-chat-container"
+                >
+                  {loading ? (
+                    <div>Loading chat history...</div>
+                  ) : chatHistory.length === 0 ? (
+                    <div>No chat history available.</div>
+                  ) : (
+                    chatHistory.map((msg) => (
+                      <div key={msg.id} className="mb-4">
+                        <div
+                          className={`flex ${
+                            msg.sender === "user"
+                              ? "justify-end"
+                              : "justify-start"
+                          }`}
+                        >
+                          <div
+                            className={`${
+                              msg.sender === "user"
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200 text-black"
+                            } p-2 rounded-lg`}
+                          >
+                            {msg.sender === "user" ? (
+                              <strong>User:</strong>
+                            ) : (
+                              <Tooltip
+                                content="Click to copy"
+                                placement="bottom"
+                              >
+                                <div
+                                  onClick={() =>
+                                    navigator.clipboard.writeText(msg.text)
+                                  }
+                                >
+                                  <strong>AI:</strong>{" "}
+                                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                </div>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </Tooltip>
-                  </div>
-                </div>
-              ))
-            )}
-          </ScrollShadow>
-        </ModalBody>
-        <ModalFooter>
-          <Button color="primary" onClick={onClose}>
-            Close
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+                    ))
+                  )}
+                </ScrollShadow>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+                <Button color="primary" onPress={onClose}>
+                  Action
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </>
   );
 };
-
 export default ContinueChat;
