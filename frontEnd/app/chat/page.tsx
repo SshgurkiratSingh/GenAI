@@ -22,6 +22,7 @@ import {
 import ContinueChat from "@/components/continueChat";
 import { toast } from "react-toastify";
 import { API_Point } from "@/APIConfig";
+import { Button } from "@nextui-org/button";
 
 // Define the structure of chat files
 interface ChatFile {
@@ -153,7 +154,7 @@ const ChatHistoryTable: React.FC = () => {
       ) : (
         <Table aria-label="Chat History Table">
           <TableHeader>
-            <TableColumn>File name</TableColumn>
+            <TableColumn>Chat Title</TableColumn>
             <TableColumn>Continue Chat</TableColumn>
             <TableColumn>Delete Chat</TableColumn>
           </TableHeader>
@@ -169,8 +170,10 @@ const ChatHistoryTable: React.FC = () => {
                     Continue
                   </button>
                 </TableCell>
-             <TableCell>
-hi
+                <TableCell>
+                  <Button variant="faded" disabled>
+                    Remove
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -205,10 +208,10 @@ hi
                 Cancel
               </button>
               <button
-                onClick={confirmDelete}
+                disabled
                 className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
               >
-                Confirm Delete
+                Action Disabled
               </button>
             </ModalFooter>
           </ModalContent>

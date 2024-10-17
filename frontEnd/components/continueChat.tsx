@@ -75,7 +75,7 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
     const fetchChatHistory = async () => {
       try {
         const response = await axios.post<ChatApiResponse>(
-          "http://192.168.100.113:2500/files/chat",
+          `${API_Point}/files/chat`,
           { email, fname: fileName }
         );
 
