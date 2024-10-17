@@ -25,24 +25,6 @@ GenAI is a full-stack web application that combines the power of AI with documen
 - MongoDB (via Prisma ORM)
 - OpenAI API
 
-## Project Structure
-```
-.
-├── backEnd/
-│   ├── index.js
-│   └── package.json
-└── frontEnd/
-    ├── app/
-    │   ├── chat/
-    │   ├── error.tsx
-    │   ├── layout.tsx
-    │   ├── page.tsx
-    │   └── providers.tsx
-    ├── components/
-    ├── package.json
-    └── README.md
-```
-
 ## Setup Instructions
 
 ### Prerequisites
