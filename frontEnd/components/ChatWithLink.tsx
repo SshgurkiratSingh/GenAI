@@ -1,3 +1,4 @@
+// ChatURLModal.tsx or ChatURLModal.jsx
 import {
   Modal,
   ModalContent,
@@ -9,7 +10,8 @@ import { useState, ChangeEvent } from "react";
 import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
 import axios from "axios";
-import { API_Point } from "@/APIConfig";
+import { API_Point } from "@/APIConfig"; // Adjust this import according to your project structure
+import ReactMarkdown from 'react-markdown'; // Import the Markdown parser
 
 interface ChatURLModalProps {
   isOpen: boolean;
@@ -73,7 +75,12 @@ const ChatURLModal: React.FC<ChatURLModalProps> = ({ isOpen, onClose }) => {
             onChange={handleQuestionChange}
           />
           {loading && <p>Loading...</p>}
-          {answer && <p>Answer: {answer}</p>}
+          {answer && (
+            <div>
+              <p>Answer:</p>
+              <ReactMarkdown>{answer}</ReactMarkdown> {/* Render answer as Markdown */}
+            </div>
+          )}
         </ModalBody>
         <ModalFooter>
           <Button onClick={handleSubmit} disabled={loading}>
