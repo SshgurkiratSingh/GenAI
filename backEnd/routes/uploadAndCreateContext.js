@@ -12,6 +12,7 @@ const {
 const { createClient } = require("@supabase/supabase-js");
 const natural = require("natural");
 const { ChatOpenAI } = require("@langchain/openai");
+
 const openAIApiKey = process.env.OPENAI_API_KEY;
 const sbUrl = process.env.SUPABASE_URL;
 const sbApiKey = process.env.SUPABASE_API_KEY;
@@ -41,7 +42,10 @@ async function extractTextFromPDF(filePath) {
   try {
     let data = await pdf(dataBuffer);
     console.log("Extracted Text:", data.text); // PDF text content
-    return data.text;
+    return {
+      text: data.text,
+      pages: data.numpages,
+    };
   } catch (error) {
     console.error("Error extracting text from PDF:", error);
     throw error;
@@ -75,6 +79,7 @@ function labelContext(text) {
     return "No Context";
   }
 }
+
 const llm = new ChatOpenAI({
   model: "gpt-4o-mini",
   temperature: 0.7,
@@ -82,8 +87,6 @@ const llm = new ChatOpenAI({
 });
 
 async function generateQuestions(textChunk) {
-  // convert textChunk into aprropriate string formatting
-
   try {
     const model = new ChatOpenAI({
       modelName: "gpt-4o-mini", // You can change this to gpt-4-turbo, gpt-4o-mini, etc.
@@ -122,11 +125,11 @@ router.post(
   "/uploadAndCreateContext",
   upload.single("file"),
   async (req, res) => {
-    console.log("Start processing the request..."); // Log request start
-    const startTime = Date.now(); // For performance tracking
+    console.log("Start processing the request...");
+    const startTime = Date.now();
 
     try {
-      const userEmail = req.body.email; // Ensure this matches your frontend
+      const userEmail = req.body.email;
       const file = req.file;
 
       if (!file) {
@@ -137,13 +140,15 @@ router.post(
         `Processing file upload for user: ${userEmail}, file: ${file.originalname}`
       );
 
-      // Step 1: Save PDF to the server
       const filePath = await savePDF(file, userEmail);
       console.log(`File saved at path: ${filePath}`);
 
-      // Step 2: Extract text from the PDF
-      const extractedText = await extractTextFromPDF(filePath);
-      console.log(`Extracted ${extractedText.length} characters from the PDF`);
+      // Extract text and page information from the PDF
+      const { text: extractedText, pages: totalPages } =
+        await extractTextFromPDF(filePath);
+      console.log(
+        `Extracted ${extractedText.length} characters from the PDF with ${totalPages} pages`
+      );
 
       if (!extractedText) {
         return res
@@ -151,7 +156,6 @@ router.post(
           .json({ error: "Failed to extract text from PDF" });
       }
 
-      // Step 3: Split the text into chunks
       console.log("Splitting the extracted text into chunks...");
       const splitter = new RecursiveCharacterTextSplitter({
         chunkSize: 1000,
@@ -160,7 +164,6 @@ router.post(
       });
       const chunks = await splitter.createDocuments([extractedText]);
 
-      // Validate the chunking process
       if (!chunks || chunks.length === 0) {
         return res
           .status(500)
@@ -168,11 +171,15 @@ router.post(
       }
       console.log(`Created ${chunks.length} chunks from the extracted text`);
 
-      // Step 4: Process each chunk, preprocess the text, and apply labels
+      // Process each chunk, preprocess the text, and apply labels
       const processedDocuments = chunks.map((chunk, index) => {
         const preprocessedText = preprocessText(chunk.pageContent);
         const label = labelContext(preprocessedText);
         console.log(`Chunk ${index + 1} labeled as: ${label}`);
+
+        // Estimate the page number based on chunk index and total pages
+        const estimatedPage =
+          Math.floor((index / chunks.length) * totalPages) + 1;
 
         return {
           pageContent: preprocessedText,
@@ -181,6 +188,8 @@ router.post(
             userEmail: userEmail,
             lineNumber: index + 1,
             label: label,
+            page: estimatedPage,
+            totalPages: totalPages,
           },
         };
       });
@@ -194,7 +203,7 @@ router.post(
         `Filtered valid documents: ${validDocuments.length}/${processedDocuments.length}`
       );
 
-      // Step 5: Create embeddings and store in Supabase
+      // Create embeddings and store in Supabase
       console.log("Creating embeddings and storing them in Supabase...");
       await SupabaseVectorStore.fromDocuments(
         validDocuments,
@@ -206,7 +215,7 @@ router.post(
       );
       console.log("Embeddings successfully created and stored");
 
-      // Step 6: Query the vector store for context
+      // Query the vector store for context
       console.log("Querying vector store for random context...");
       const context = await queryVectorStore(
         "question, result, conclusion ,summary , index, introduction,",
@@ -217,7 +226,7 @@ router.post(
         }
       );
 
-      // Step 7: Generate questions based on the context
+      // Generate questions based on the context
       console.log("Generating questions from the context...");
       const questions = await generateQuestions(context);
       console.log(`Generated questions: ${JSON.stringify(questions)}`);
@@ -225,6 +234,7 @@ router.post(
       const totalTime = Date.now() - startTime;
       console.log(`Total processing time: ${totalTime}ms`);
       console.log(file.originalname);
+
       // Send success response
       res.status(200).json({
         message: "File processed and embeddings created successfully",
@@ -246,10 +256,11 @@ router.post(
 router.get("/", (req, res) => {
   res.json({ message: "Experimental Server for Collab" });
 });
+
 router.get("/getContext", async (req, res) => {
   try {
     const query = req.query.query;
-    const result = await queryVectorStore(query); // Renamed 'res' to 'result'
+    const result = await queryVectorStore(query);
     res
       .status(200)
       .json({ message: "Query processed successfully", result: result });
@@ -274,6 +285,7 @@ async function initVectorStore() {
   }
   return vectorStore;
 }
+
 async function queryVectorStore(query, k = 5, filter = null) {
   const store = await initVectorStore();
 
@@ -281,7 +293,7 @@ async function queryVectorStore(query, k = 5, filter = null) {
     await store.similaritySearchWithScore(query, k, filter);
 
   for (const [doc, score] of similaritySearchWithScoreResults) {
-    console.log(`*${doc.pageContent} [${JSON.stringify()}]`);
+    console.log(`*${doc.pageContent} [${JSON.stringify(doc.metadata)}]`);
   }
   return similaritySearchWithScoreResults;
 }

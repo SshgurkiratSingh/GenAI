@@ -51,7 +51,7 @@ Respond in the following JSON format:
   "actionRequired": {
     "moreContext": "string{keywords to search for more context in vector db}"
   },
-  "references": ["array of references"],
+  "references": ["inlude metadata info here mention info like page no line no and label it appropriately,it should be a string"],
   "suggestedQueries": ["string"]
 }
 You do not need to mention the reply format as \`\`\` json in reply as it is already understood

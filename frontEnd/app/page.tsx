@@ -115,7 +115,7 @@ const HomePage = () => {
         }}
         initialSuggestedQueries={uploadedQuestions}
         title={uploadedTitle} // This is correct
-        fileName={fileName} // Fix this line to pass the actual fileName
+        fileName={fileName} 
       />
 
       {/* Login Modal */}
