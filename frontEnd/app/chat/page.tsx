@@ -170,8 +170,8 @@ const ChatHistoryTable: React.FC = () => {
                   </button>
                 </TableCell>
              <TableCell>
-hi
-                </TableCell>
+Under Development              
+  </TableCell>
               </TableRow>
             ))}
           </TableBody>
