@@ -1,26 +1,52 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@nextui-org/modal";
 import { useState, ChangeEvent } from "react";
-import { Input, Button } from "@nextui-org/react"; 
+import { Input } from "@nextui-org/input";
+import { Button } from "@nextui-org/button";
+import axios from "axios";
+import { API_Point } from "@/APIConfig";
 
 interface ChatURLModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (url: string) => void;
 }
 
-const ChatURLModal: React.FC<ChatURLModalProps> = ({ isOpen, onClose, onSubmit }) => {
+const ChatURLModal: React.FC<ChatURLModalProps> = ({ isOpen, onClose }) => {
   const [url, setUrl] = useState<string>("");
+  const [question, setQuestion] = useState<string>("");
+  const [answer, setAnswer] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleUrlChange = (event: ChangeEvent<HTMLInputElement>) => {
     setUrl(event.target.value);
   };
 
-  const handleSubmit = () => {
-    if (url.trim()) {
-      onSubmit(url); 
-      onClose(); 
+  const handleQuestionChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setQuestion(event.target.value);
+  };
+
+  const handleSubmit = async () => {
+    if (url.trim() && question.trim()) {
+      setLoading(true);
+      try {
+        const response = await axios.post(`${API_Point}/url/ask-from-url`, {
+          url,
+          question,
+        });
+        setAnswer(response.data.answer);
+      } catch (error) {
+        console.error("Error:", error);
+        setAnswer("An error occurred while processing your request.");
+      } finally {
+        setLoading(false);
+      }
     } else {
-      alert("Please enter a valid URL.");
+      alert("Please enter both a valid URL and a question.");
     }
   };
 
@@ -29,7 +55,7 @@ const ChatURLModal: React.FC<ChatURLModalProps> = ({ isOpen, onClose, onSubmit }
       closeButton
       aria-labelledby="modal-title"
       isOpen={isOpen}
-      onOpenChange={onClose} // Ensure it correctly handles the modal state
+      onOpenChange={onClose}
     >
       <ModalContent>
         <ModalHeader>
@@ -39,12 +65,23 @@ const ChatURLModal: React.FC<ChatURLModalProps> = ({ isOpen, onClose, onSubmit }
           <Input
             placeholder="Enter URL"
             value={url}
-            onChange={handleInputChange}
+            onChange={handleUrlChange}
           />
+          <Input
+            placeholder="Ask a question"
+            value={question}
+            onChange={handleQuestionChange}
+          />
+          {loading && <p>Loading...</p>}
+          {answer && <p>Answer: {answer}</p>}
         </ModalBody>
         <ModalFooter>
-          <Button onClick={handleSubmit}>Submit</Button>
-          <Button color="secondary" onClick={onClose}>Close</Button>
+          <Button onClick={handleSubmit} disabled={loading}>
+            Submit
+          </Button>
+          <Button color="secondary" onClick={onClose}>
+            Close
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
