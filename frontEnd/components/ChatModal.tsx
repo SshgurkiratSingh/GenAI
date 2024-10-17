@@ -245,7 +245,12 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
                   <Tooltip content="Click to copy" placement="bottom">
                     <div
+                      role="button" // Add a role attribute for accessibility
+                      tabIndex={0} // Add tabIndex to make the element focusable
                       onClick={() => handleCopyMessage(msg.text)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleCopyMessage(msg.text);
+                      }} // Add keyboard support
                       className={`mx-2 p-2 rounded-lg cursor-pointer ${
                         msg.sender === "user"
                           ? "bg-blue-500 text-white"
@@ -320,7 +325,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
           </div>
         </ModalFooter>
       </ModalContent>
-      <audio ref={audioRef} src="/notification-sound.mp3" preload="auto" />
+      <audio ref={audioRef} src="/notification-sound.mp3" preload="auto">
+        {/* Since captions are not needed, include aria attributes for clarity */}
+        <track kind="captions" srcLang="en" label="No captions available" />
+      </audio>
     </Modal>
   );
 };
