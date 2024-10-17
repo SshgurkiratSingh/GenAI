@@ -13,10 +13,12 @@ import Link from "next/link";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { Spinner } from "@nextui-org/spinner";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/modal";
+import ContinueChat from "@/components/continueChat";
 
 // Define the structure of chat files
 interface ChatFile {
-  file: string; // You can define this based on the exact structure of files you receive
+  file: string;
 }
 
 const ChatHistoryTable: React.FC = () => {
@@ -24,18 +26,23 @@ const ChatHistoryTable: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   const fetchChatHistory = async (): Promise<void> => {
     if (session?.user?.email) {
       try {
         setIsLoading(true);
-        const response = await axios.post<{ files: ChatFile[] }>(
+        const response = await axios.post<{ message: string; files: string[] }>(
           "http://192.168.100.113:2500/files/history",
           {
             email: session.user.email,
           }
         );
-        setChatFiles(response.data.files);
+        const files = response.data.files.map((file) => ({
+          file: file.slice(0, -5), // Remove last 5 characters
+        }));
+        setChatFiles(files);
         setError(null);
       } catch (error) {
         console.error("Error fetching chat history:", error);
@@ -64,6 +71,16 @@ const ChatHistoryTable: React.FC = () => {
     }
   };
 
+  const openModal = (file: string) => {
+    setSelectedFile(file);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedFile(null);
+  };
+
   if (isLoading) {
     return <Spinner label="Loading chat history..." />;
   }
@@ -88,11 +105,12 @@ const ChatHistoryTable: React.FC = () => {
               <TableRow key={index}>
                 <TableCell>{file.file}</TableCell>
                 <TableCell>
-                  <Link href={`/chat/${encodeURIComponent(file.file)}`}>
-                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                      Continue
-                    </button>
-                  </Link>
+                  <button
+                    onClick={() => openModal(file.file)}
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Continue
+                  </button>
                 </TableCell>
                 <TableCell>
                   <button
@@ -106,6 +124,31 @@ const ChatHistoryTable: React.FC = () => {
             ))}
           </TableBody>
         </Table>
+      )}
+
+      {/* Modal for Continue Chat */}
+      {selectedFile && (
+        <Modal isOpen={isModalOpen} onClose={closeModal} size="xl">
+          <ModalContent>
+            <ModalHeader>Continue Chat for {selectedFile}</ModalHeader>
+            <ModalBody>
+              <ContinueChat
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                email={session?.user?.email || ""}
+                fileName={selectedFile}
+              />
+            </ModalBody>
+            <ModalFooter>
+              <button
+                onClick={closeModal}
+                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Close
+              </button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       )}
     </div>
   );
