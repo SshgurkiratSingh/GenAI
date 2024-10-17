@@ -8,19 +8,18 @@ import { MdOutlineFileUpload } from "react-icons/md";
 import { HiDocumentSearch } from "react-icons/hi";
 import UploadModal from "@/components/upload";
 import ChatModal from "@/components/ChatModal";
-import LoginModal from "@/components/LoginModal";
-import RegisterModal from "@/components/RegisterModal";
-import Link from "next/link"; // Import Link for navigation
+import LoginModal from "@/components/LoginModal"; // Import the LoginModal component
+import RegisterModal from "@/components/RegisterModal"; // Import the RegisterModal component
 
 const HomePage = () => {
   const { data: session } = useSession();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); // State for login modal visibility
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false); // State for register modal visibility
   const [uploadedQuestions, setUploadedQuestions] = useState<string[]>([]);
   const [uploadedTitle, setUploadedTitle] = useState<string>("");
   const [text, setText] = useState("");
-  const [fileName, setFileName] = useState<string>("");
+  const [fileName, setFileName] = useState<string>(""); // Capture file name here
   const [processingTime, setProcessingTime] = useState<string>("");
 
   useEffect(() => {
@@ -28,7 +27,8 @@ const HomePage = () => {
     const fullText = session
       ? `Welcome, ${username}!`
       : "Welcome to PDF Reader!";
-    setText(fullText);
+
+    setText(fullText); // Set the text without typing effect
   }, [session]);
 
   const handleUploadSuccess = (
@@ -39,14 +39,25 @@ const HomePage = () => {
   ) => {
     setUploadedQuestions(questions);
     setUploadedTitle(title);
-    setFileName(uploadedFileName);
-    setProcessingTime(uploadedProcessingTime);
+    setFileName(uploadedFileName); // Set the file name
+    setProcessingTime(uploadedProcessingTime); // Optionally track processing time
   };
 
-  const handleLoginClick = () => setIsLoginModalOpen(true);
-  const handleSignUpClick = () => setIsRegisterModalOpen(true);
-  const handleCloseLoginModal = () => setIsLoginModalOpen(false);
-  const handleCloseRegisterModal = () => setIsRegisterModalOpen(false);
+  const handleLoginClick = () => {
+    setIsLoginModalOpen(true); // Open the login modal when the login button is clicked
+  };
+
+  const handleSignUpClick = () => {
+    setIsRegisterModalOpen(true); // Open the register modal when the sign-up button is clicked
+  };
+
+  const handleCloseLoginModal = () => {
+    setIsLoginModalOpen(false); // Close the login modal
+  };
+
+  const handleCloseRegisterModal = () => {
+    setIsRegisterModalOpen(false); // Close the register modal
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 flex items-center justify-center">
@@ -58,25 +69,39 @@ const HomePage = () => {
           <h1 className="text-center text-xl text-white mb-8">
             Unlock the power of your PDFs with AI-driven insights and analysis.
           </h1>
-          <div className="flex justify-center space-x-4">
-            <Button
-              color="success"
-              endContent={<MdOutlineFileUpload />}
-              onClick={() => setIsUploadModalOpen(true)}
-            >
-              Upload File
-            </Button>
-
-            {/* Link the Browse History button to the new 'history' page */}
-            <Link href="chat" passHref>
-              <Button color="danger" startContent={<HiDocumentSearch />}>
-                Browse History
-              </Button>
-            </Link>
+          <div>
+            {session ? (
+              <div className="flex justify-center space-x-4">
+                <Button color="success" 
+                endContent={<MdOutlineFileUpload />}
+                onClick={()=> setIsUploadModalOpen(true)}>
+                       Upload File     
+                  </Button>    
+                  <Button color="danger"  startContent={<HiDocumentSearch/>}>
+        Browse History
+      </Button>
+              </div>
+            ) : (
+              <div className="flex justify-center space-x-4">
+                <Button
+                  color="primary"
+                  className="px-8 py-6 text-lg font-bold"
+                  onClick={handleLoginClick} // Open login modal on click
+                >
+                  Login
+                </Button>
+                <Button
+                  color="secondary"
+                  className="px-8 py-6 text-lg font-bold"
+                  onClick={handleSignUpClick} // Open register modal on click
+                >
+                  Sign Up
+                </Button>
+              </div>
+            )}
           </div>
         </CardBody>
       </Card>
-
       <UploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
@@ -89,21 +114,21 @@ const HomePage = () => {
           setUploadedTitle("");
         }}
         initialSuggestedQueries={uploadedQuestions}
-        title={uploadedTitle}
-        fileName={fileName}
+        title={uploadedTitle} // This is correct
+        fileName={fileName} 
       />
 
       {/* Login Modal */}
       <LoginModal
         visible={isLoginModalOpen}
         onClose={handleCloseLoginModal}
-        onRegisterClick={handleSignUpClick}
+        onRegisterClick={handleSignUpClick} // Open register modal when user clicks on "Sign Up" in login modal
       />
       {/* Register Modal */}
       <RegisterModal
         visible={isRegisterModalOpen}
         onClose={handleCloseRegisterModal}
-        onLoginClick={handleLoginClick}
+        onLoginClick={handleLoginClick} // Open login modal when user clicks on "Login" in register modal
       />
     </div>
   );
