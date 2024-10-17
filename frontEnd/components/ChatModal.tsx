@@ -12,8 +12,9 @@ import { Button } from "@nextui-org/button";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { Tooltip } from "@nextui-org/tooltip";
 import { Chip } from "@nextui-org/chip";
+import { Switch } from "@nextui-org/switch";
 import ReactMarkdown from "react-markdown";
-import { Accordion, AccordionItem } from "@nextui-org/accordion"; // Import Accordion
+import { Accordion, AccordionItem } from "@nextui-org/accordion";
 
 type AIReply = {
   reply: string;
@@ -61,10 +62,30 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const audioRef = useRef<HTMLAudioElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatHistory, setChatHistory] = useState<string[]>([]);
+  const [autoSave, setAutoSave] = useState<boolean>(false);
+  const [references, setReferences] = useState<string>("");
 
   useEffect(() => {
     setSuggestedQueries(initialSuggestedQueries);
   }, [initialSuggestedQueries]);
+
+  const updateChatFile = async () => {
+    if (!autoSave) return;
+
+    try {
+      await axios.post("http://192.168.100.113:2500/files/updateChat", {
+        email: session?.user?.email,
+        fname: title,
+        data: JSON.stringify({
+          chatHistory,
+          fileName,
+          title,
+        }),
+      });
+    } catch (error) {
+      console.error("Error updating chat file:", error);
+    }
+  };
 
   const handleSend = async (): Promise<void> => {
     if (input.trim()) {
@@ -98,12 +119,19 @@ const ChatModal: React.FC<ChatModalProps> = ({
         };
         setMessages((prev) => [...prev, newAIMessage]);
 
+        // Update references
+        setReferences(aiResponse.references);
+
         if (aiResponse.suggestedQueries) {
           setSuggestedQueries(aiResponse.suggestedQueries);
         }
 
         // Update chat history
-        setChatHistory((prev) => [...prev, input, aiResponse.reply]);
+        const updatedHistory = [...chatHistory, input, aiResponse.reply];
+        setChatHistory(updatedHistory);
+
+        // Update chat file
+        await updateChatFile();
 
         setIsTyping(false);
         if (audioRef.current) {
@@ -157,9 +185,8 @@ const ChatModal: React.FC<ChatModalProps> = ({
     e: React.KeyboardEvent<HTMLTextAreaElement>
   ) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      // Check if Enter is pressed and Shift is not held
-      e.preventDefault(); // Prevent the new line
-      handleSend(); // Call the send function
+      e.preventDefault();
+      handleSend();
     }
   };
 
@@ -175,11 +202,20 @@ const ChatModal: React.FC<ChatModalProps> = ({
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
           <span>{title || "Chat with AI Assistant"}</span>
-          {fileName && (
-            <Chip size="sm" color="primary">
-              {fileName}
-            </Chip>
-          )}
+          <div className="flex items-center space-x-2">
+            {fileName && (
+              <Chip size="sm" color="primary">
+                {fileName}
+              </Chip>
+            )}
+            <Switch
+              checked={autoSave}
+              onChange={(e) => setAutoSave(e.target.checked)}
+              size="sm"
+            >
+              Auto-save
+            </Switch>
+          </div>
         </ModalHeader>
         <ModalBody>
           <ScrollShadow
@@ -189,10 +225,14 @@ const ChatModal: React.FC<ChatModalProps> = ({
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex mb-4 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex mb-4 ${
+                  msg.sender === "user" ? "justify-end" : "justify-start"
+                }`}
               >
                 <div
-                  className={`flex items-start ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
+                  className={`flex items-start ${
+                    msg.sender === "user" ? "flex-row-reverse" : "flex-row"
+                  }`}
                 >
                   {msg.sender === "user" ? (
                     <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
@@ -233,11 +273,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
             )}
           </ScrollShadow>
 
-          {/* Adding Accordion */}
           <Accordion>
             <AccordionItem key="1" aria-label="Accordion 1" title="References">
-              {messages.find((msg) => msg.references)?.references ||
-                "No references available."}
+              {references || "No references available."}
             </AccordionItem>
           </Accordion>
         </ModalBody>
@@ -247,7 +285,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
               ref={textareaRef}
               value={input}
               onChange={handleTextareaChange}
-              onKeyDown={handleTextareaKeyDown} // Add this line
+              onKeyDown={handleTextareaKeyDown}
               placeholder="Type your message..."
               rows={1}
               className="w-full p-2 border rounded resize-none max-h-40 overflow-hidden"
@@ -255,31 +293,35 @@ const ChatModal: React.FC<ChatModalProps> = ({
               maxLength={500}
             />
             <div className="flex justify-between items-center mt-2">
-              <span className="text-sm text-gray-500">Max 500 characters.</span>
-              <Button color="primary" onClick={handleSend}>
+              <span className="text-gray-500 text-sm">
+                Press Enter to send, Shift+Enter for a new line.
+              </span>
+              <Button
+                color="primary"
+                onClick={handleSend}
+                disabled={!input.trim()}
+              >
                 Send
               </Button>
             </div>
+
             {suggestedQueries.length > 0 && (
-              <div className="mt-2">
-                <p className="text-sm font-semibold">Suggested queries:</p>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {suggestedQueries.map((query, index) => (
-                    <Button
-                      key={index}
-                      size="sm"
-                      variant="flat"
-                      onClick={() => handleSuggestedQueryClick(query)}
-                    >
-                      {query}
-                    </Button>
-                  ))}
-                </div>
+              <div className="mt-2 flex flex-wrap">
+                {suggestedQueries.map((query, idx) => (
+                  <Chip
+                    key={idx}
+                    onClick={() => handleSuggestedQueryClick(query)}
+                    className="mr-2 mb-2"
+                  >
+                    {query}
+                  </Chip>
+                ))}
               </div>
             )}
           </div>
         </ModalFooter>
       </ModalContent>
+      <audio ref={audioRef} src="/notification-sound.mp3" preload="auto" />
     </Modal>
   );
 };
