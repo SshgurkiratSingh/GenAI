@@ -1,1 +1,1 @@
-export const API_Point = "http://localhost:2500";
+export const API_Point = "http://192.168.100.113:2500";
