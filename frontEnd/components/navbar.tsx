@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "@nextui-org/react"; 
+import { Button } from "@nextui-org/button";
 import { IoIosLogOut } from "react-icons/io";
 
 import React, { useState } from "react";
@@ -52,7 +52,9 @@ const NavigationBar = () => {
         onMenuOpenChange={setIsMenuOpen}
       >
         {/* Align left - PDF Reader */}
-        <NavbarContent justify="start" className="mr-auto"> {/* Added mr-auto for left alignment */} 
+        <NavbarContent justify="start" className="mr-auto">
+          {" "}
+          {/* Added mr-auto for left alignment */}
           <NavbarBrand>
             <p className="font-bold text-inherit gradient-text">PDF Reader</p>
           </NavbarBrand>
@@ -73,22 +75,24 @@ const NavigationBar = () => {
 
         {/* Align right - Welcome Message and Logout */}
         <NavbarContent justify="end">
-          {session ? (
-            <>
-              <NavbarItem>
-                <span>Welcome, {session.user?.name}</span>
-              </NavbarItem>
-              <NavbarItem>
-                <Button 
-                  color="danger"  
-                  startContent={<IoIosLogOut />} // Fixed startIcon usage
-                  onClick={handleLogout}      // Added onClick to handle logout
-                >
-                  Log Out
-                </Button>
-              </NavbarItem>
-            </>
-          ) : null /* Remove Login and Sign Up buttons */ }
+          {
+            session ? (
+              <>
+                <NavbarItem>
+                  <span>Welcome, {session.user?.name}</span>
+                </NavbarItem>
+                <NavbarItem>
+                  <Button
+                    color="danger"
+                    startContent={<IoIosLogOut />} // Fixed startIcon usage
+                    onClick={handleLogout} // Added onClick to handle logout
+                  >
+                    Log Out
+                  </Button>
+                </NavbarItem>
+              </>
+            ) : null /* Remove Login and Sign Up buttons */
+          }
         </NavbarContent>
 
         <NavbarMenu>
@@ -100,8 +104,8 @@ const NavigationBar = () => {
                   index === 2
                     ? "warning"
                     : index === items.length - 1
-                    ? "danger"
-                    : "foreground"
+                      ? "danger"
+                      : "foreground"
                 }
                 href={item.href}
               >
