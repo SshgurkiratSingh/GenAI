@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardBody } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
-
+import { MdOutlineFileUpload } from "react-icons/md";
+import { HiDocumentSearch } from "react-icons/hi";
 import UploadModal from "@/components/upload";
 import ChatModal from "@/components/ChatModal";
 import LoginModal from "@/components/LoginModal"; // Import the LoginModal component
@@ -71,22 +72,14 @@ const HomePage = () => {
           <div>
             {session ? (
               <div className="flex justify-center space-x-4">
-                <Button
-                  color="success"
-                  className="px-8 py-6 text-lg font-bold"
-                  onClick={() => setIsUploadModalOpen(true)}
-                >
-                  Upload PDF
-                </Button>
-                <Button
-                  color="primary"
-                  className="px-8 py-6 text-lg font-bold"
-                  onClick={() => {
-                    /* Add functionality */
-                  }}
-                >
-                  Browse History
-                </Button>
+                <Button color="success" 
+                endContent={<MdOutlineFileUpload />}
+                onClick={()=> setIsUploadModalOpen(true)}>
+                       Upload File     
+                  </Button>    
+                  <Button color="danger"  startContent={<HiDocumentSearch/>}>
+        Browse History
+      </Button>
               </div>
             ) : (
               <div className="flex justify-center space-x-4">
