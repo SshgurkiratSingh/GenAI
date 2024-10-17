@@ -11,6 +11,7 @@ import { Button } from "@nextui-org/button";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { Tooltip } from "@nextui-org/tooltip";
 import { Input } from "@nextui-org/input";
+import { Chip } from "@nextui-org/chip";
 import ReactMarkdown from "react-markdown";
 
 // Define the structure for a single chat message
@@ -36,8 +37,11 @@ interface ChatApiResponse {
 // Define the structure for the AI's structured reply
 interface AiReply {
   reply: string;
-  actionRequired: Record<string, unknown>; // Could be more specific based on your needs
-  references: string[];
+  actionRequired: {
+    moreContext?: string;
+    [key: string]: unknown;
+  };
+  references: string | string[];
   suggestedQueries: string[];
 }
 
@@ -61,7 +65,7 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
   const [title, setTitle] = useState<string>("");
   const [userInput, setUserInput] = useState<string>("");
   const [sending, setSending] = useState<boolean>(false);
-  const [aiResponse, setAiResponse] = useState<AiReply | null>(null); // State for AI response
+  const [aiResponse, setAiResponse] = useState<AiReply | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -82,7 +86,7 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
           (message, index) => ({
             id: index + 1,
             text: message,
-            sender: index % 2 === 0 ? "user" : "ai", // Ensure sender is either "user" or "ai"
+            sender: index % 2 === 0 ? "user" : "ai",
           })
         );
 
@@ -129,7 +133,7 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
     setSending(true);
 
     try {
-      const response = await axios.post<ChatApiResponse>(
+      const response = await axios.post<AiReply>(
         "http://192.168.100.113:2500/chat/chat",
         {
           message: userInput,
@@ -139,12 +143,12 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
         }
       );
 
-      const aiResponseData: AiReply = JSON.parse(response.data.message); // Assuming the AI response is in the new structure
-      setAiResponse(aiResponseData); // Store AI response in state
+      const aiResponseData: AiReply = response.data;
+      setAiResponse(aiResponseData);
 
       const aiMessage: ChatMessage = {
         id: chatHistory.length + 2,
-        text: aiResponseData.reply, // Use the reply field for the AI message text
+        text: aiResponseData.reply,
         sender: "ai",
       };
 
@@ -152,7 +156,6 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
       setNewMessage(true);
     } catch (error) {
       console.error("Error sending message:", error);
-      // Add an error message to the chat
       setChatHistory((prev) => [
         ...prev,
         {
@@ -170,6 +173,13 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setUserInput(suggestion);
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
   };
 
@@ -224,34 +234,53 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
                                 </div>
                               </Tooltip>
                             )}
-                            {/* Render AI response with ReactMarkdown */}
                             {msg.sender === "ai" ? (
                               <>
                                 <ReactMarkdown>{msg.text}</ReactMarkdown>
-                                {aiResponse && (
-                                  <>
-                                    <div className="mt-2">
-                                      <strong>Action Required:</strong>{" "}
-                                      <span>{JSON.stringify(aiResponse.actionRequired)}</span>
-                                    </div>
-                                    <div>
-                                      <strong>References:</strong>
-                                      <ul>
-                                        {aiResponse.references.map((reference, index) => (
-                                          <li key={index}>{reference}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                    <div>
-                                      <strong>Suggested Queries:</strong>
-                                      <ul>
-                                        {aiResponse.suggestedQueries.map((query, index) => (
-                                          <li key={index}>{query}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  </>
-                                )}
+                                {aiResponse &&
+                                  msg.id === chatHistory.length && (
+                                    <>
+                                      {aiResponse.actionRequired && (
+                                        <div className="mt-2">
+                                          <strong>Action Required:</strong>{" "}
+                                          <span>
+                                            {aiResponse.actionRequired
+                                              .moreContext ||
+                                              JSON.stringify(
+                                                aiResponse.actionRequired
+                                              )}
+                                          </span>
+                                        </div>
+                                      )}
+                                      <div>
+                                        <strong>References:</strong>{" "}
+                                        <span>
+                                          {typeof aiResponse.references ===
+                                          "string"
+                                            ? aiResponse.references
+                                            : aiResponse.references.join(", ")}
+                                        </span>
+                                      </div>
+                                      <div>
+                                        <strong>Suggested Queries:</strong>
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                          {aiResponse.suggestedQueries.map(
+                                            (query, index) => (
+                                              <Chip
+                                                key={index}
+                                                onClick={() =>
+                                                  handleSuggestionClick(query)
+                                                }
+                                                className="cursor-pointer"
+                                              >
+                                                {query}
+                                              </Chip>
+                                            )
+                                          )}
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
                               </>
                             ) : (
                               <span>{msg.text}</span>

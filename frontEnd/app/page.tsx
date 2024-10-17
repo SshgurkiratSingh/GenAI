@@ -161,7 +161,7 @@ const HomePage = () => {
       <ChatURLModal
         isOpen={isChatURLModalOpen}
         onClose={() => setIsChatURLModalOpen(false)}
-        onSubmit={handleChatWithLink} // Handle URL submission
+        
       />
     </div>
   );
