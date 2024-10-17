@@ -75,7 +75,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
     if (!autoSave) return;
 
     try {
-      await axios.post("http://192.168.100.113:2500/files/updateChat", {
+      await axios.post(`${API_Point}/files/updateChat`, {
         email: session?.user?.email,
         fname: title,
         data: JSON.stringify({
