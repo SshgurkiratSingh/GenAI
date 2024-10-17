@@ -13,13 +13,14 @@ import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { Tooltip } from "@nextui-org/tooltip";
 import { Chip } from "@nextui-org/chip";
 import ReactMarkdown from "react-markdown";
+import { Accordion, AccordionItem } from "@nextui-org/accordion"; // Import Accordion
 
 type AIReply = {
   reply: string;
   actionRequired?: {
     moreContext?: string;
   };
-  references: string[];
+  references: string;
   suggestedQueries: string[];
 };
 
@@ -27,7 +28,7 @@ interface ChatMessage {
   id: number;
   text: string;
   sender: "user" | "ai";
-  references?: string[];
+  references?: string;
 }
 
 interface ChatModalProps {
@@ -54,7 +55,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
   ]);
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(initialSuggestedQueries);
+  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(
+    initialSuggestedQueries
+  );
   const audioRef = useRef<HTMLAudioElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatHistory, setChatHistory] = useState<string[]>([]);
@@ -150,8 +153,11 @@ const ChatModal: React.FC<ChatModalProps> = ({
     }
   };
 
-  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) { // Check if Enter is pressed and Shift is not held
+  const handleTextareaKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>
+  ) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      // Check if Enter is pressed and Shift is not held
       e.preventDefault(); // Prevent the new line
       handleSend(); // Call the send function
     }
@@ -176,7 +182,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
           )}
         </ModalHeader>
         <ModalBody>
-          <ScrollShadow className="h-[400px] overflow-y-auto" id="chat-container">
+          <ScrollShadow
+            className="h-[400px] overflow-y-auto"
+            id="chat-container"
+          >
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -223,6 +232,14 @@ const ChatModal: React.FC<ChatModalProps> = ({
               </div>
             )}
           </ScrollShadow>
+
+          {/* Adding Accordion */}
+          <Accordion>
+            <AccordionItem key="1" aria-label="Accordion 1" title="References">
+              {messages.find((msg) => msg.references)?.references ||
+                "No references available."}
+            </AccordionItem>
+          </Accordion>
         </ModalBody>
         <ModalFooter>
           <div className="w-full flex flex-col">
@@ -263,7 +280,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
           </div>
         </ModalFooter>
       </ModalContent>
-      <audio ref={audioRef} src="/ding.mp3" preload="auto" />
     </Modal>
   );
 };
