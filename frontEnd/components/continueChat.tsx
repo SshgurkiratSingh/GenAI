@@ -6,8 +6,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@nextui-org/modal";
-import { Button } from "@nextui-org/button";
+  Button,
+} from "@nextui-org/react"; // Ensure you have installed @nextui-org/react
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { Tooltip } from "@nextui-org/tooltip";
 import ReactMarkdown from "react-markdown";
@@ -21,7 +21,6 @@ interface ChatMessage {
 // Define the structure for the chat history storage
 interface ChatHistoryStore {
   chatHistory: ChatMessage[];
-  fileName: string;
   title: string;
 }
 
@@ -47,7 +46,6 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
 }) => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [newMessage, setNewMessage] = useState<boolean>(false);
   const [title, setTitle] = useState<string>("");
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -62,14 +60,7 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
 
         // Parse the JSON string in the data field
         const parsedData: ChatHistoryStore = JSON.parse(response.data.data);
-
-        // Update the chat history and title state
-        setChatHistory(
-          parsedData.chatHistory.map((item) => ({
-            question: item[0],
-            answer: item[1],
-          }))
-        );
+        setChatHistory(parsedData.chatHistory);
         setTitle(parsedData.title);
         setLoading(false);
       } catch (error) {
@@ -83,24 +74,22 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
     }
   }, [isOpen, email, fileName]);
 
-  // Play notification sound and auto-scroll when a new message is added
+  // Auto-scroll when chatHistory is updated
   useEffect(() => {
     const chatContainer = document.getElementById("continue-chat-container");
-
     if (chatContainer) {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
-
-    if (newMessage && audioRef.current) {
+    // Optionally play a sound if you have an audio file
+    if (audioRef.current) {
       audioRef.current.play();
     }
-    setNewMessage(false); // Reset after playing sound
-  }, [chatHistory, newMessage]);
+  }, [chatHistory]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader className="flex justify-between items-center">
+        <ModalHeader>
           <span>{title || fileName || "Continue Chat"}</span>
         </ModalHeader>
         <ModalBody>
@@ -110,7 +99,7 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
           >
             {loading ? (
               <div>Loading chat history...</div>
-            ) : !chatHistory || chatHistory.length === 0 ? (
+            ) : chatHistory.length === 0 ? (
               <div>No chat history available.</div>
             ) : (
               chatHistory.map((msg, index) => (
@@ -139,11 +128,10 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
           </ScrollShadow>
         </ModalBody>
         <ModalFooter>
-          <Button color="primary" onClick={onClose}>
-            Close
-          </Button>
+          <Button onClick={onClose}>Close</Button>
         </ModalFooter>
       </ModalContent>
+      <audio ref={audioRef} src="/notification.mp3" /> {/* Update the source as needed */}
     </Modal>
   );
 };

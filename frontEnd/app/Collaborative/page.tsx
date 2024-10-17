@@ -65,11 +65,7 @@ export default function DocsPage() {
         </CardFooter>
       </Card>
 
-      <SearchModal
-        setIsOpen ={onClose} 
-        taskHistory={[]} 
-        visible={isOpen}
-      />
+ 
 
       <ChatModal
         isOpen={isChatModalOpen}

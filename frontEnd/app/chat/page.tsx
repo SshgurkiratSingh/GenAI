@@ -13,7 +13,13 @@ import Link from "next/link";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { Spinner } from "@nextui-org/spinner";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/modal";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@nextui-org/modal";
 import ContinueChat from "@/components/continueChat";
 
 // Define the structure of chat files
@@ -28,6 +34,10 @@ const ChatHistoryTable: React.FC = () => {
   const { data: session } = useSession();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+
+  // New state for delete confirmation modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [fileToDelete, setFileToDelete] = useState<string | null>(null);
 
   const fetchChatHistory = async (): Promise<void> => {
     if (session?.user?.email) {
@@ -81,6 +91,23 @@ const ChatHistoryTable: React.FC = () => {
     setSelectedFile(null);
   };
 
+  const openDeleteModal = (file: string) => {
+    setFileToDelete(file);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setFileToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (fileToDelete) {
+      await handleDelete(fileToDelete);
+      closeDeleteModal();
+    }
+  };
+
   if (isLoading) {
     return <Spinner label="Loading chat history..." />;
   }
@@ -114,7 +141,7 @@ const ChatHistoryTable: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   <button
-                    onClick={() => handleDelete(file.file)}
+                    onClick={() => openDeleteModal(file.file)}
                     className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                   >
                     Delete
@@ -145,6 +172,32 @@ const ChatHistoryTable: React.FC = () => {
                 className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
               >
                 Close
+              </button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {/* Modal for Delete Confirmation */}
+      {fileToDelete && (
+        <Modal isOpen={isDeleteModalOpen} onClose={closeDeleteModal} size="sm">
+          <ModalContent>
+            <ModalHeader>Confirm Deletion</ModalHeader>
+            <ModalBody>
+              Are you sure you want to delete the chat file: <strong>{fileToDelete}</strong>?
+            </ModalBody>
+            <ModalFooter>
+              <button
+                onClick={closeDeleteModal}
+                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Confirm Delete
               </button>
             </ModalFooter>
           </ModalContent>
