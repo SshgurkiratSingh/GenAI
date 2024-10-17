@@ -9,7 +9,6 @@ import {
   ModalFooter,
 } from "@nextui-org/modal";
 import { Button } from "@nextui-org/button";
-import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { Tooltip } from "@nextui-org/tooltip";
 import { Chip } from "@nextui-org/chip";
 import { Switch } from "@nextui-org/switch";
@@ -56,14 +55,14 @@ const ChatModal: React.FC<ChatModalProps> = ({
   ]);
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(
-    initialSuggestedQueries
-  );
+  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(initialSuggestedQueries);
   const audioRef = useRef<HTMLAudioElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatHistory, setChatHistory] = useState<string[]>([]);
   const [autoSave, setAutoSave] = useState<boolean>(false);
   const [references, setReferences] = useState<string>("");
+
+  const chatContainerRef = useRef<HTMLDivElement>(null); // Ref for the chat container
 
   useEffect(() => {
     setSuggestedQueries(initialSuggestedQueries);
@@ -176,8 +175,8 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
     // Reset textarea height
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto"; // Reset to auto
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set to scroll height
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
 
@@ -191,14 +190,13 @@ const ChatModal: React.FC<ChatModalProps> = ({
   };
 
   useEffect(() => {
-    const chatContainer = document.getElementById("chat-container");
-    if (chatContainer) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages]); // Scroll to the bottom when new messages are added
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} size="5xl" scrollBehavior="inside" backdrop="blur">
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
           <span>{title || "Chat with AI Assistant"}</span>
@@ -218,9 +216,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
           </div>
         </ModalHeader>
         <ModalBody>
-          <ScrollShadow
-            className="h-[400px] overflow-y-auto"
+          <div
             id="chat-container"
+            ref={chatContainerRef} // Attach the ref to this container
+            className="overflow-y-auto max-h-[400px]" // Adjust the height as needed
           >
             {messages.map((msg) => (
               <div
@@ -246,7 +245,12 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
                   <Tooltip content="Click to copy" placement="bottom">
                     <div
+                      role="button" // Add a role attribute for accessibility
+                      tabIndex={0} // Add tabIndex to make the element focusable
                       onClick={() => handleCopyMessage(msg.text)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleCopyMessage(msg.text);
+                      }} // Add keyboard support
                       className={`mx-2 p-2 rounded-lg cursor-pointer ${
                         msg.sender === "user"
                           ? "bg-blue-500 text-white"
@@ -271,7 +275,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
                 </div>
               </div>
             )}
-          </ScrollShadow>
+          </div>
 
           <Accordion>
             <AccordionItem key="1" aria-label="Accordion 1" title="References">
@@ -321,7 +325,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
           </div>
         </ModalFooter>
       </ModalContent>
-      <audio ref={audioRef} src="/notification-sound.mp3" preload="auto" />
+      <audio ref={audioRef} src="/notification-sound.mp3" preload="auto">
+        {/* Since captions are not needed, include aria attributes for clarity */}
+        <track kind="captions" srcLang="en" label="No captions available" />
+      </audio>
     </Modal>
   );
 };
