@@ -31,42 +31,57 @@ export default function DocsPage() {
   };
 
   return (
-    <div className="flex flex-col items-center min-w-[90%] mt-0 pt-0 h-full">
+    <div className="flex flex-col items-center justify-center w-full h-screen p-4">
       <title>Chat with AI</title>
-      <Card fullWidth className="min-w-[1100px] w-full mt-0 pt-0">
-        <CardHeader>
-          <h1>Chat with AI Assistant</h1>
-          <Divider orientation="vertical" /> <br />
-          <Chip>
+
+      {/* Apply stronger shadow and hover animation */}
+      <Card className="w-full max-w-[1100px] shadow-2xl bg-white transition-transform transform hover:scale-105 hover:shadow-3xl duration-300 ease-in-out">
+        <CardHeader className="flex flex-col items-center">
+          {/* Gradient Text */}
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+            Chat with AI Assistant
+          </h1>
+          <Divider orientation="horizontal" className="my-4 w-1/2" />
+          <Chip className="bg-blue-100 text-blue-700">
             <h2>{currentLoggedInUser}</h2>
           </Chip>
         </CardHeader>
-        <Divider />
-        <CardBody className="min-w-[900px]">
-          <p>Welcome to the AI chat interface. Click below to start chatting with the AI assistant.</p>
+
+        <Divider className="my-2" />
+
+        <CardBody className="text-center">
+          <p className="text-gray-600">
+            Welcome to the AI chat interface. Click below to start chatting with the AI assistant.
+          </p>
         </CardBody>
-        <Divider />
-        <CardFooter className="flex gap-4">
+
+        <Divider className="my-2" />
+
+        <CardFooter className="flex justify-center gap-4 py-4">
           <Button
             color="secondary"
             variant="ghost"
             onPress={() => setIsChatModalOpen(true)}
+            className="hover:bg-secondary hover:text-white transition-colors"
           >
             Chat with AI
           </Button>
+
           <Button
             color="primary"
-            disabled={isLoading}
             variant="ghost"
+            disabled={isLoading}
             onClick={refreshData}
+            className="hover:bg-primary hover:text-white transition-colors"
           >
             {isLoading ? "Refreshing..." : "Refresh Data"}
           </Button>
         </CardFooter>
       </Card>
 
+      {/* Modals */}
       <SearchModal
-        setIsOpen ={onClose} 
+        setIsOpen={onClose}
         taskHistory={[]} 
         visible={isOpen}
       />
