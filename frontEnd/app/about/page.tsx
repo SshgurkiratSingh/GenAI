@@ -69,7 +69,7 @@ export default function AboutPage() {
           </p>
         </div>
         <div className="section-image mt-6">
-          <img src="/images/why.png" alt="Why Choose Us" className="icon w-48 h-auto" />
+          <img src="images.jpeg" alt="Why Choose Us" className="icon w-48 h-auto" />
         </div>
       </section>
 
