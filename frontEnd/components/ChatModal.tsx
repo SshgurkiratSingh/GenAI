@@ -51,9 +51,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const userName = session?.user?.name || "User";
   const userInitial = userName.charAt(0).toUpperCase();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [suggestedQueries, setSuggestedQueries] = useState<string[]>(
@@ -69,13 +67,39 @@ const ChatModal: React.FC<ChatModalProps> = ({
     setSuggestedQueries(initialSuggestedQueries);
   }, [initialSuggestedQueries]);
 
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (fileName && session?.user?.email) {
+        try {
+          const response = await axios.post("http://192.168.100.113:2500/files/loadChat", {
+            email: session.user.email,
+            fname: fileName,
+          });
+          const loadedData = JSON.parse(response.data.data);
+          setChatHistory(loadedData.chatHistory || []);
+          setMessages(loadedData.chatHistory.map((msg: string, index: number) => ({
+            id: index + 1,
+            text: msg,
+            sender: index % 2 === 0 ? "user" : "ai",
+          })));
+        } catch (error) {
+          console.error("Error loading chat history:", error);
+        }
+      } else {
+        setMessages([{ id: 1, text: "Hello! How can I assist you today?", sender: "ai" }]);
+      }
+    };
+
+    loadChatHistory();
+  }, [fileName, session]);
+
   const updateChatFile = async () => {
     if (!autoSave) return;
 
     try {
       await axios.post("http://192.168.100.113:2500/files/updateChat", {
         email: session?.user?.email,
-        fname: title,
+        fname: title || fileName,
         data: JSON.stringify({
           chatHistory,
           fileName,
