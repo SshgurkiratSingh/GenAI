@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
-const port = 2502;
+const port = 2500;
 const morgan = require("morgan");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
