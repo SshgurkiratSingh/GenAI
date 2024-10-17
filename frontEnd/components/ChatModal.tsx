@@ -14,6 +14,7 @@ import { Chip } from "@nextui-org/chip";
 import { Switch } from "@nextui-org/switch";
 import ReactMarkdown from "react-markdown";
 import { Accordion, AccordionItem } from "@nextui-org/accordion";
+import { API_Point } from "@/APIConfig";
 
 type AIReply = {
   reply: string;
@@ -55,7 +56,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
   ]);
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(initialSuggestedQueries);
+  const [suggestedQueries, setSuggestedQueries] = useState<string[]>(
+    initialSuggestedQueries
+  );
   const audioRef = useRef<HTMLAudioElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatHistory, setChatHistory] = useState<string[]>([]);
@@ -99,7 +102,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
       try {
         const response = await axios.post<AIReply>(
-          "http://192.168.100.113:2500/chat/chat",
+          `${API_Point}/chat/chat`,
           {
             message: input,
             history: chatHistory,
@@ -191,12 +194,19 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [messages]); // Scroll to the bottom when new messages are added
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="5xl" scrollBehavior="inside" backdrop="blur">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="5xl"
+      scrollBehavior="inside"
+      backdrop="blur"
+    >
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
           <span>{title || "Chat with AI Assistant"}</span>

@@ -9,6 +9,7 @@ import {
 import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
 import { useSession } from "next-auth/react";
+import { API_Point } from "@/APIConfig";
 
 interface LLM {
   questions: string[];
@@ -72,7 +73,7 @@ export default function UploadModal({
       formData.append("email", session.user.email);
 
       const response = await fetch(
-        "http://192.168.100.113:2500/upload/uploadAndCreateContext",
+        `${API_Point}/upload/uploadAndCreateContext`,
         {
           method: "POST",
           body: formData,
@@ -86,7 +87,7 @@ export default function UploadModal({
       }
 
       const result: ReportResponse = await response.json();
-      
+
       onUploadSuccess(
         result.llm.questions,
         result.llm.title,

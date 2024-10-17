@@ -13,6 +13,7 @@ import { Tooltip } from "@nextui-org/tooltip";
 import { Input } from "@nextui-org/input";
 import { Chip } from "@nextui-org/chip";
 import ReactMarkdown from "react-markdown";
+import { API_Point } from "@/APIConfig";
 
 // Define the structure for a single chat message
 interface ChatMessage {
@@ -133,15 +134,12 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
     setSending(true);
 
     try {
-      const response = await axios.post<AiReply>(
-        "http://192.168.100.113:2500/chat/chat",
-        {
-          message: userInput,
-          history: chatHistory.map((msg) => msg.text),
-          email: email,
-          fileName: fileName,
-        }
-      );
+      const response = await axios.post<AiReply>(`${API_Point}/chat/chat`, {
+        message: userInput,
+        history: chatHistory.map((msg) => msg.text),
+        email: email,
+        fileName: fileName,
+      });
 
       const aiResponseData: AiReply = response.data;
       setAiResponse(aiResponseData);
@@ -319,7 +317,6 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
           )}
         </ModalContent>
       </Modal>
-      
     </>
   );
 };

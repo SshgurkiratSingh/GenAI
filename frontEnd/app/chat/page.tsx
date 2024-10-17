@@ -45,7 +45,7 @@ const ChatHistoryTable: React.FC = () => {
       try {
         setIsLoading(true);
         const response = await axios.post<{ message: string; files: string[] }>(
-          "http://192.168.100.113:2500/files/history",
+          `${API_Point}/files/history`,
           {
             email: session.user.email,
           }
@@ -70,7 +70,7 @@ const ChatHistoryTable: React.FC = () => {
 
   const handleDelete = async (fileName: string): Promise<void> => {
     try {
-      await axios.post("http://192.168.100.113:2500/files/deleteChatFile", {
+      await axios.post(`${API_Point}/files/deleteChatFile`, {
         email: session?.user?.email,
         fname: fileName,
       });
@@ -120,7 +120,9 @@ const ChatHistoryTable: React.FC = () => {
 
         if (response.ok) {
           // Notify success
-          toast.success("File deleted successfully! Refreshing chat history...");
+          toast.success(
+            "File deleted successfully! Refreshing chat history..."
+          );
           // Refresh the chat history
           fetchChatHistory();
         } else {
