@@ -73,6 +73,7 @@ export default function AboutPage() {
 
       {/* Call to Action Section */}
       <section className="p-6 w-full max-w-4xl text-center">
+        
         <button className="cta-button bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300">
           Try Now
         </button>
