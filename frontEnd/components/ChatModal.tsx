@@ -198,7 +198,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
   }, [messages]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} size="5xl" scrollBehavior="inside"  backdrop="blur">
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
           <span>{title || "Chat with AI Assistant"}</span>
