@@ -319,7 +319,7 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
           )}
         </ModalContent>
       </Modal>
-      <audio ref={audioRef} src="/notification-sound.mp3" />
+      
     </>
   );
 };
