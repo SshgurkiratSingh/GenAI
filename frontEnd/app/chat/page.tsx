@@ -169,13 +169,8 @@ const ChatHistoryTable: React.FC = () => {
                     Continue
                   </button>
                 </TableCell>
-                <TableCell>
-                  <button
-                    onClick={() => openDeleteModal(file.file)}
-                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    Delete
-                  </button>
+             <TableCell>
+hi
                 </TableCell>
               </TableRow>
             ))}
