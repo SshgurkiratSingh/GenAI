@@ -8,7 +8,6 @@ import { toast } from "react-toastify";
 import { useDisclosure } from "@nextui-org/modal";
 
 import ChatModal from "@/components/ChatModal";
-import SearchModal from "./Components/searchModal"; // Assuming you have a SearchModal component
 
 export default function DocsPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
