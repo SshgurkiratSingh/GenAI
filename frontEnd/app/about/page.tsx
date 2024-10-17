@@ -1,3 +1,5 @@
+import Link from "next/link"; // Import Link from Next.js
+
 export default function AboutPage() {
   return (
     <div className="container flex flex-col items-center gap-10 px-4 py-8">
@@ -73,10 +75,12 @@ export default function AboutPage() {
 
       {/* Call to Action Section */}
       <section className="p-6 w-full max-w-4xl text-center">
-        
-        <button className="cta-button bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300">
-          Try Now
-        </button>
+        {/* Wrap the button with Link component to navigate to HomePage */}
+        <Link href="/" passHref>
+          <button className="cta-button bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300">
+            Try Now
+          </button>
+        </Link>
       </section>
     </div>
   );
