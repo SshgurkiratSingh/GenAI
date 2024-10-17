@@ -9,7 +9,6 @@ import {
   TableRow,
   TableCell,
 } from "@nextui-org/table";
-import Link from "next/link";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { Spinner } from "@nextui-org/spinner";
@@ -83,12 +82,6 @@ const ChatHistoryTable: React.FC = () => {
     }
   };
 
-  /*************  ✨ Codeium Command ⭐  *************/
-  /**
-   * Open the modal for the given chat file.
-   * @param {string} file The name of the chat file to open.
-   */
-  /******  9b256ab3-6901-4e18-b107-9e0fe2a5b37d  *******/
   const openModal = (file: string) => {
     setSelectedFile(file);
     setIsModalOpen(true);
@@ -112,7 +105,7 @@ const ChatHistoryTable: React.FC = () => {
   const confirmDelete = async () => {
     if (fileToDelete) {
       try {
-        const response = await fetch(`${API_Point}/deleteFile`, {
+        const response = await fetch(`${API_Point}/files/deleteFile`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -127,16 +120,16 @@ const ChatHistoryTable: React.FC = () => {
 
         if (response.ok) {
           // Notify success
-          alert(result.message);
-          // Optionally refresh the file list or update the UI
-          toast.success("File deleted successfully! Refresh to continue");
+          toast.success("File deleted successfully! Refreshing chat history...");
+          // Refresh the chat history
+          fetchChatHistory();
         } else {
           // Handle errors
-          alert(result.error || "Failed to delete the file.");
+          toast.error(result.error || "Failed to delete the file.");
         }
       } catch (error) {
         console.error("Error during file deletion:", error);
-        alert("An error occurred while deleting the file.");
+        toast.error("An error occurred while deleting the file.");
       } finally {
         closeDeleteModal();
       }

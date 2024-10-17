@@ -10,6 +10,7 @@ import {
 import { Button } from "@nextui-org/button";
 import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { Tooltip } from "@nextui-org/tooltip";
+import { Input } from "@nextui-org/input";
 import ReactMarkdown from "react-markdown";
 
 // Define the structure for a single chat message
@@ -32,6 +33,14 @@ interface ChatApiResponse {
   data: string; // JSON string containing ChatHistoryStore
 }
 
+// Define the structure for the AI's structured reply
+interface AiReply {
+  reply: string;
+  actionRequired: Record<string, unknown>; // Could be more specific based on your needs
+  references: string[];
+  suggestedQueries: string[];
+}
+
 // Define the props for ContinueChat component
 interface ContinueChatProps {
   isOpen: boolean;
@@ -50,7 +59,11 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [newMessage, setNewMessage] = useState<boolean>(false);
   const [title, setTitle] = useState<string>("");
+  const [userInput, setUserInput] = useState<string>("");
+  const [sending, setSending] = useState<boolean>(false);
+  const [aiResponse, setAiResponse] = useState<AiReply | null>(null); // State for AI response
   const audioRef = useRef<HTMLAudioElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Fetch the chat history when the modal is open or email/fileName changes
   useEffect(() => {
@@ -102,9 +115,67 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
     setNewMessage(false); // Reset after playing sound
   }, [chatHistory, newMessage]);
 
+  const handleSendMessage = async () => {
+    if (!userInput.trim()) return;
+
+    const newUserMessage: ChatMessage = {
+      id: chatHistory.length + 1,
+      text: userInput,
+      sender: "user",
+    };
+
+    setChatHistory((prev) => [...prev, newUserMessage]);
+    setUserInput("");
+    setSending(true);
+
+    try {
+      const response = await axios.post<ChatApiResponse>(
+        "http://192.168.100.113:2500/chat/chat",
+        {
+          message: userInput,
+          history: chatHistory.map((msg) => msg.text),
+          email: email,
+          fileName: fileName,
+        }
+      );
+
+      const aiResponseData: AiReply = JSON.parse(response.data.message); // Assuming the AI response is in the new structure
+      setAiResponse(aiResponseData); // Store AI response in state
+
+      const aiMessage: ChatMessage = {
+        id: chatHistory.length + 2,
+        text: aiResponseData.reply, // Use the reply field for the AI message text
+        sender: "ai",
+      };
+
+      setChatHistory((prev) => [...prev, aiMessage]);
+      setNewMessage(true);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Add an error message to the chat
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          id: chatHistory.length + 2,
+          text: "Error: Failed to send message. Please try again.",
+          sender: "ai",
+        },
+      ]);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   return (
     <>
-      <Modal isOpen={isOpen} onOpenChange={onClose}>
+      <Modal isOpen={isOpen} onOpenChange={onClose} size="2xl">
         <ModalContent>
           {(onClose) => (
             <>
@@ -113,7 +184,7 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
               </ModalHeader>
               <ModalBody>
                 <ScrollShadow
-                  className="h-[400px] overflow-y-auto"
+                  className="h-[400px] overflow-y-auto mb-4"
                   id="continue-chat-container"
                 >
                   {loading ? (
@@ -135,7 +206,7 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
                               msg.sender === "user"
                                 ? "bg-blue-500 text-white"
                                 : "bg-gray-200 text-black"
-                            } p-2 rounded-lg`}
+                            } p-2 rounded-lg max-w-[70%]`}
                           >
                             {msg.sender === "user" ? (
                               <strong>User:</strong>
@@ -149,10 +220,41 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
                                     navigator.clipboard.writeText(msg.text)
                                   }
                                 >
-                                  <strong>AI:</strong>{" "}
-                                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                  <strong>AI:</strong>
                                 </div>
                               </Tooltip>
+                            )}
+                            {/* Render AI response with ReactMarkdown */}
+                            {msg.sender === "ai" ? (
+                              <>
+                                <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                {aiResponse && (
+                                  <>
+                                    <div className="mt-2">
+                                      <strong>Action Required:</strong>{" "}
+                                      <span>{JSON.stringify(aiResponse.actionRequired)}</span>
+                                    </div>
+                                    <div>
+                                      <strong>References:</strong>
+                                      <ul>
+                                        {aiResponse.references.map((reference, index) => (
+                                          <li key={index}>{reference}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                    <div>
+                                      <strong>Suggested Queries:</strong>
+                                      <ul>
+                                        {aiResponse.suggestedQueries.map((query, index) => (
+                                          <li key={index}>{query}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </>
+                                )}
+                              </>
+                            ) : (
+                              <span>{msg.text}</span>
                             )}
                           </div>
                         </div>
@@ -160,20 +262,37 @@ const ContinueChat: React.FC<ContinueChatProps> = ({
                     ))
                   )}
                 </ScrollShadow>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    ref={inputRef}
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyPress={handleInputKeyPress}
+                    placeholder="Type your message..."
+                    disabled={sending}
+                    fullWidth
+                  />
+                  <Button
+                    color="primary"
+                    onClick={handleSendMessage}
+                    disabled={sending || !userInput.trim()}
+                  >
+                    {sending ? "Sending..." : "Send"}
+                  </Button>
+                </div>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
                   Close
-                </Button>
-                <Button color="primary" onPress={onClose}>
-                  Action
                 </Button>
               </ModalFooter>
             </>
           )}
         </ModalContent>
       </Modal>
+      <audio ref={audioRef} src="/notification-sound.mp3" />
     </>
   );
 };
+
 export default ContinueChat;
