@@ -1,4 +1,7 @@
 "use client";
+import { Button } from "@nextui-org/react"; 
+import { IoIosLogOut } from "react-icons/io";
+
 import React, { useState } from "react";
 import {
   Navbar,
@@ -9,7 +12,6 @@ import {
   NavbarItem,
 } from "@nextui-org/navbar";
 import Link from "next/link";
-import { Button } from "@nextui-org/button";
 import { useSession, signOut } from "next-auth/react";
 
 import { ThemeSwitch } from "./theme-switch";
@@ -50,7 +52,7 @@ const NavigationBar = () => {
         onMenuOpenChange={setIsMenuOpen}
       >
         {/* Align left - PDF Reader */}
-        <NavbarContent justify="start" className="mr-auto"> {/* Added mr-auto for left alignment */}
+        <NavbarContent justify="start" className="mr-auto"> {/* Added mr-auto for left alignment */} 
           <NavbarBrand>
             <p className="font-bold text-inherit gradient-text">PDF Reader</p>
           </NavbarBrand>
@@ -77,8 +79,12 @@ const NavigationBar = () => {
                 <span>Welcome, {session.user?.name}</span>
               </NavbarItem>
               <NavbarItem>
-                <Button color="primary" onClick={handleLogout}>
-                  Logout
+                <Button 
+                  color="danger"  
+                  startContent={<IoIosLogOut />} // Fixed startIcon usage
+                  onClick={handleLogout}      // Added onClick to handle logout
+                >
+                  Log Out
                 </Button>
               </NavbarItem>
             </>
