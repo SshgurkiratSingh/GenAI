@@ -1,5 +1,5 @@
 # Dark Knight Risers - AI-Powered PDF Reader and Chat Application
-
+The frontend is hosted as http not https
 ## Overview
 GenAI is a full-stack web application that combines the power of AI with document analysis and chat functionality. It allows users to upload PDF files, chat with AI about the content, and even interact with web pages through a chat interface.
 
