@@ -10,7 +10,7 @@ import {
   TableCell,
 } from "@nextui-org/table";
 import axios from "axios";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { Spinner } from "@nextui-org/spinner";
 import {
   Modal,
@@ -33,7 +33,7 @@ const ChatHistoryTable: React.FC = () => {
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
@@ -66,8 +66,10 @@ const ChatHistoryTable: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchChatHistory();
-  }, [session]);
+    if (status === "authenticated") {
+      fetchChatHistory();
+    }
+  }, [session, status]);
 
   const handleDelete = async (fileName: string): Promise<void> => {
     try {
@@ -139,6 +141,24 @@ const ChatHistoryTable: React.FC = () => {
     }
   };
 
+  if (status === "loading") {
+    return <Spinner label="Loading chat history..." />;
+  }
+
+  if (status === "unauthenticated") {
+    return (
+      <div>
+        <p>Please log in to view your chat history.</p>
+        <Button
+          onClick={() => signIn()}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Log In
+        </Button>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return <Spinner label="Loading chat history..." />;
   }
@@ -148,38 +168,80 @@ const ChatHistoryTable: React.FC = () => {
   }
 
   return (
-    <div>
-      {chatFiles.length === 0 ? (
-        <div>No chat files found.</div>
-      ) : (
-        <Table aria-label="Chat History Table">
-          <TableHeader>
-            <TableColumn>Chat Title</TableColumn>
-            <TableColumn>Continue Chat</TableColumn>
-            <TableColumn>Delete Chat</TableColumn>
-          </TableHeader>
-          <TableBody>
-            {chatFiles.map((file, index) => (
-              <TableRow key={index}>
-                <TableCell>{file.file}</TableCell>
-                <TableCell>
-                  <button
-                    onClick={() => openModal(file.file)}
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                  >
-                    Continue
-                  </button>
-                </TableCell>
-                <TableCell>
+    <div className="flex space-x-4">
+      {/* Chat History Table */}
+      <div className="flex-1">
+        {chatFiles.length === 0 ? (
+          <div>No chat files found.</div>
+        ) : (
+          <Table aria-label="Chat History Table">
+            <TableHeader>
+              <TableColumn>Chat Title</TableColumn>
+              <TableColumn>Continue Chat</TableColumn>
+              <TableColumn>Delete Chat</TableColumn>
+            </TableHeader>
+            <TableBody>
+              {chatFiles.map((file, index) => (
+                <TableRow key={index}>
+                  <TableCell>{file.file}</TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => openModal(file.file)}
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                      Continue
+                    </button>
+                  </TableCell>
+                  <TableCell>
                   <Button variant="faded" disabled>
                     Remove
                   </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      {/* New Table for Chat History */}
+      <div className="flex-1">
+        <Table aria-label="Chat Upload History Table">
+          <TableHeader>
+            <TableColumn>File Uploaded</TableColumn>
+            <TableColumn>Continue</TableColumn>
+            <TableColumn>Delete</TableColumn>
+          </TableHeader>
+          <TableBody>
+            {chatFiles.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center">
+                  No chat files uploaded.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              chatFiles.map((file, index) => (
+                <TableRow key={index}>
+                  <TableCell>{file.file}</TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => openModal(file.file)}
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                      Continue
+                    </button>
+                  </TableCell>
+                  <TableCell>
+                  <Button variant="faded" disabled>
+                    Remove
+                  </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
-      )}
+      </div>
 
       {/* Modal for Continue Chat */}
       {selectedFile && (
@@ -208,10 +270,10 @@ const ChatHistoryTable: React.FC = () => {
                 Cancel
               </button>
               <button
-                disabled
+                onClick={confirmDelete}
                 className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
               >
-                Action Disabled
+                Delete
               </button>
             </ModalFooter>
           </ModalContent>
