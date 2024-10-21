@@ -12,9 +12,19 @@ import { Button } from "@nextui-org/button";
 import { Tooltip } from "@nextui-org/tooltip";
 import { Chip } from "@nextui-org/chip";
 import { Switch } from "@nextui-org/switch";
+import { Slider } from "@nextui-org/slider";
+import { Select, SelectItem } from "@nextui-org/select";
 import ReactMarkdown from "react-markdown";
 import { Accordion, AccordionItem } from "@nextui-org/accordion";
 import { API_Point } from "@/APIConfig";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@nextui-org/dropdown";
+import { Pencil, Trash2, Download } from "lucide-react";
+import { saveAs } from "file-saver";
 
 type AIReply = {
   reply: string;
@@ -30,6 +40,7 @@ interface ChatMessage {
   text: string;
   sender: "user" | "ai";
   references?: string;
+  isEdited?: boolean;
 }
 
 interface ChatModalProps {
@@ -64,8 +75,12 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const [chatHistory, setChatHistory] = useState<string[]>([]);
   const [autoSave, setAutoSave] = useState<boolean>(false);
   const [references, setReferences] = useState<string>("");
+  const [contextWindow, setContextWindow] = useState<number>(5);
+  const [llmModel, setLlmModel] = useState<string>("GPT-4o-mini");
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [editInput, setEditInput] = useState<string>("");
 
-  const chatContainerRef = useRef<HTMLDivElement>(null); // Ref for the chat container
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setSuggestedQueries(initialSuggestedQueries);
@@ -82,6 +97,8 @@ const ChatModal: React.FC<ChatModalProps> = ({
           chatHistory,
           fileName,
           title,
+          contextWindow,
+          llmModel,
         }),
       });
     } catch (error) {
@@ -105,9 +122,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
           `${API_Point}/chat/chat`,
           {
             message: input,
-            history: chatHistory,
+            history: chatHistory.slice(-contextWindow * 2),
             email: session?.user?.email,
             fileName: fileName,
+            llmModel: llmModel,
           },
           { headers: { "Content-Type": "application/json" } }
         );
@@ -121,18 +139,15 @@ const ChatModal: React.FC<ChatModalProps> = ({
         };
         setMessages((prev) => [...prev, newAIMessage]);
 
-        // Update references
         setReferences(aiResponse.references);
 
         if (aiResponse.suggestedQueries) {
           setSuggestedQueries(aiResponse.suggestedQueries);
         }
 
-        // Update chat history
         const updatedHistory = [...chatHistory, input, aiResponse.reply];
         setChatHistory(updatedHistory);
 
-        // Update chat file
         await updateChatFile();
 
         setIsTyping(false);
@@ -154,16 +169,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
     }
   };
 
-  const handleCopyMessage = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      alert("Message copied to clipboard!");
-    } catch (error) {
-      console.error("Failed to copy message: ", error);
-      alert("Failed to copy message.");
-    }
-  };
-
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
 
@@ -176,7 +181,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const handleSuggestedQueryClick = (query: string) => {
     setInput(query);
 
-    // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
@@ -192,18 +196,115 @@ const ChatModal: React.FC<ChatModalProps> = ({
     }
   };
 
+  const handleEditMessage = (id: number) => {
+    const messageToEdit = messages.find((msg) => msg.id === id);
+    if (messageToEdit) {
+      setEditingMessageId(id);
+      setEditInput(messageToEdit.text);
+    }
+  };
+
+  const handleSaveEdit = async (id: number) => {
+    if (editInput.trim()) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === id ? { ...msg, text: editInput, isEdited: true } : msg
+        )
+      );
+      setEditingMessageId(null);
+      setEditInput("");
+
+      // Update chat history
+      const updatedHistory = chatHistory.map((msg, index) =>
+        index === id - 1 ? editInput : msg
+      );
+      setChatHistory(updatedHistory);
+
+      // Refetch AI response
+      setIsTyping(true);
+      try {
+        const response = await axios.post<AIReply>(
+          `${API_Point}/chat/chat`,
+          {
+            message: editInput,
+            history: updatedHistory.slice(-contextWindow * 2),
+            email: session?.user?.email,
+            fileName: fileName,
+            llmModel: llmModel,
+          },
+          { headers: { "Content-Type": "application/json" } }
+        );
+        const aiResponse = response.data;
+
+        const newAIMessage: ChatMessage = {
+          id: messages.length + 1,
+          text: aiResponse.reply,
+          sender: "ai",
+          references: aiResponse.references,
+        };
+        setMessages((prev) => [...prev, newAIMessage]);
+
+        setReferences(aiResponse.references);
+
+        if (aiResponse.suggestedQueries) {
+          setSuggestedQueries(aiResponse.suggestedQueries);
+        }
+
+        const finalUpdatedHistory = [...updatedHistory, aiResponse.reply];
+        setChatHistory(finalUpdatedHistory);
+
+        await updateChatFile();
+
+        setIsTyping(false);
+        if (audioRef.current) {
+          audioRef.current.play();
+        }
+      } catch (error) {
+        console.error("Error fetching AI response after edit:", error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: prev.length + 1,
+            text: "Error in communication with AI after edit.",
+            sender: "ai",
+          },
+        ]);
+        setIsTyping(false);
+      }
+    }
+  };
+
+  const handleDeleteMessage = async (id: number) => {
+    setMessages((prev) => prev.filter((msg) => msg.id !== id));
+
+    // Update chat history
+    const updatedHistory = chatHistory.filter((_, index) => index !== id - 1);
+    setChatHistory(updatedHistory);
+
+    await updateChatFile();
+  };
+
+  const handleExportChat = () => {
+    const chatContent = messages
+      .map((msg) => `${msg.sender.toUpperCase()}: ${msg.text}`)
+      .join("\n\n");
+
+    const blob = new Blob([chatContent], { type: "text/plain;charset=utf-8" });
+    saveAs(blob, `${title || "chat"}_export.txt`);
+  };
+
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
-  }, [messages]); // Scroll to the bottom when new messages are added
+  }, [messages]);
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="5xl"
+      size="full"
       scrollBehavior="inside"
       backdrop="blur"
     >
@@ -223,13 +324,46 @@ const ChatModal: React.FC<ChatModalProps> = ({
             >
               Auto-save
             </Switch>
+            <Button size="sm" onClick={handleExportChat}>
+              <Download size={16} />
+              Export Chat
+            </Button>
           </div>
         </ModalHeader>
         <ModalBody>
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center space-x-2">
+              <span>Context Window:</span>
+              <Slider
+                size="sm"
+                step={1}
+                minValue={5}
+                maxValue={15}
+                value={contextWindow}
+                onChange={(value) => setContextWindow(value as number)}
+                className="w-32"
+              />
+              <span>{contextWindow}</span>
+            </div>
+            <Select
+              label="LLM Model"
+              value={llmModel}
+              onChange={(e) => setLlmModel(e.target.value)}
+              size="sm"
+              className="w-48"
+            >
+              <SelectItem key="GPT-4o" value="GPT-4o">
+                GPT-4o
+              </SelectItem>
+              <SelectItem key="GPT-4o-mini" value="GPT-4o-mini">
+                GPT-4o-mini
+              </SelectItem>
+            </Select>
+          </div>
           <div
             id="chat-container"
-            ref={chatContainerRef} // Attach the ref to this container
-            className="overflow-y-auto max-h-[400px]" // Adjust the height as needed
+            ref={chatContainerRef}
+            className="overflow-y-auto "
           >
             {messages.map((msg) => (
               <div
@@ -253,27 +387,80 @@ const ChatModal: React.FC<ChatModalProps> = ({
                     </div>
                   )}
 
-                  <Tooltip content="Click to copy" placement="bottom">
-                    <div
-                      role="button" // Add a role attribute for accessibility
-                      tabIndex={0} // Add tabIndex to make the element focusable
-                      onClick={() => handleCopyMessage(msg.text)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleCopyMessage(msg.text);
-                      }} // Add keyboard support
-                      className={`mx-2 p-2 rounded-lg cursor-pointer ${
-                        msg.sender === "user"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200 text-black"
-                      }`}
-                    >
-                      {msg.sender === "ai" ? (
-                        <ReactMarkdown>{msg.text}</ReactMarkdown>
-                      ) : (
-                        msg.text
-                      )}
-                    </div>
-                  </Tooltip>
+                  <div
+                    className={`mx-2 p-2 rounded-lg ${
+                      msg.sender === "user"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 text-black"
+                    }`}
+                  >
+                    {editingMessageId === msg.id ? (
+                      <div>
+                        <textarea
+                          value={editInput}
+                          onChange={(e) => setEditInput(e.target.value)}
+                          className="w-full p-2 border rounded resize-none"
+                          rows={3}
+                        />
+                        <div className="mt-2 flex justify-end">
+                          <Button
+                            size="sm"
+                            color="primary"
+                            onClick={() => handleSaveEdit(msg.id)}
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            size="sm"
+                            color="secondary"
+                            onClick={() => setEditingMessageId(null)}
+                            className="ml-2"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        {msg.sender === "ai" ? (
+                          <ReactMarkdown>{msg.text}</ReactMarkdown>
+                        ) : (
+                          msg.text
+                        )}
+                        {msg.isEdited && (
+                          <span className="text-xs italic ml-2">(edited)</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {msg.sender === "user" && editingMessageId !== msg.id && (
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <Button size="sm" variant="light">
+                          •••
+                        </Button>
+                      </DropdownTrigger>
+                      <DropdownMenu aria-label="Message actions">
+                        <DropdownItem
+                          key="edit"
+                          startContent={<Pencil size={16} />}
+                          onClick={() => handleEditMessage(msg.id)}
+                        >
+                          Edit
+                        </DropdownItem>
+                        <DropdownItem
+                          key="delete"
+                          className="text-danger"
+                          color="danger"
+                          startContent={<Trash2 size={16} />}
+                          onClick={() => handleDeleteMessage(msg.id)}
+                        >
+                          Delete
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
+                  )}
                 </div>
               </div>
             ))}
@@ -336,7 +523,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
         </ModalFooter>
       </ModalContent>
       <audio ref={audioRef} src="/notification-sound.mp3" preload="auto">
-        {/* Since captions are not needed, include aria attributes for clarity */}
         <track kind="captions" srcLang="en" label="No captions available" />
       </audio>
     </Modal>
