@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 import {
   Modal,
@@ -6,49 +5,46 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  useDisclosure,
 } from "@nextui-org/modal";
 import { Button } from "@nextui-org/button";
+import { API_Point } from "@/APIConfig";
 
 interface PDFModalProps {
-  link: string; // Keep the link prop
-  comment: string; // Keep the comment prop
-  page: number; // Keep the page prop
+  isOpen: boolean;
+  onClose: () => void;
+  filename: string; // Pass filename to the component
+  specificPage: number; // New prop for specific page
 }
 
-const PDFModal = ({ link, comment, page }: PDFModalProps) => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+const PDFModal: React.FC<PDFModalProps> = ({
+  isOpen,
+  onClose,
+  filename,
+  specificPage,
+}) => {
+  const pdfLink = `${API_Point}/guri2022@hotmail.com/${filename}#page=${specificPage}`; // Adjust the path as needed
 
   return (
-    <>
-      <Button onPress={onOpen}>Open Modal</Button>
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Information
-              </ModalHeader>
-              <ModalBody>
-                {/* Displaying Comment */}
-                <p>{comment}</p>
-                {/* You can choose to display the link and page info if needed */}
-                <p>Link: {link}</p>
-                <p>Page: {page}</p>
-              </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Close
-                </Button>
-                <Button color="primary" onPress={onClose}>
-                  Action
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-    </>
+    <Modal isOpen={isOpen} onClose={onClose} size="full">
+      <ModalContent>
+        <ModalHeader>
+          <h2>{filename}</h2>
+        </ModalHeader>
+        <ModalBody>
+          {/* Display PDF using an iframe */}
+          <iframe
+            src={pdfLink}
+            width="100%"
+            height="600px"
+            style={{ border: "none" }}
+            title="PDF Document"
+          ></iframe>
+        </ModalBody>
+        <ModalFooter>
+          <Button onClick={onClose}>Close</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 };
 

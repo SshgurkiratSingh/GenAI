@@ -57,6 +57,7 @@ interface ChatModalProps {
   initialSuggestedQueries?: string[];
   title?: string;
   fileName?: string;
+  isNewChat?: boolean;
 }
 
 const ChatModal: React.FC<ChatModalProps> = ({
@@ -65,7 +66,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
   initialSuggestedQueries = [],
   title = "",
   fileName = "",
+  isNewChat = false,
 }) => {
+  const modalTitle = isNewChat ? "New Chat" : title || "Chat with AI Assistant";
   const { data: session } = useSession();
   const userName = session?.user?.name || "User";
   const userInitial = userName.charAt(0).toUpperCase();
@@ -96,17 +99,25 @@ const ChatModal: React.FC<ChatModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setMessages([
-        { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
+        {
+          id: 1,
+          text: isNewChat
+            ? "Hello! How can I assist you today?"
+            : "Hello! I'm ready to continue our conversation about the file you've uploaded. What would you like to know?",
+          sender: "ai",
+        },
       ]);
       setInput("");
       setChatHistory([]);
-      setSuggestedQueries(initialSuggestedQueries);
+      setSuggestedQueries(isNewChat ? [] : initialSuggestedQueries);
       setReferences([]);
       setAutoSave(false);
       setLlmModel("GPT-4o-mini");
       setContextWindow(5);
 
-      if (fileName && userFiles.includes(fileName)) {
+      if (isNewChat) {
+        setSelectedFiles([]);
+      } else if (fileName && userFiles.includes(fileName)) {
         setSelectedFiles([fileName]);
       } else {
         setSelectedFiles([]);
@@ -129,7 +140,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
       return () => clearTimeout(timer); // Cleanup the timer
     }
-  }, [isOpen, initialSuggestedQueries, fileName, session]); // Removed userFiles from the dependencies
+  }, [isOpen, initialSuggestedQueries, fileName, session, isNewChat]); // Removed userFiles from the dependencies
 
   // Separate useEffect for fetching user files based on session change
   useEffect(() => {
@@ -152,6 +163,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
         : [...prevSelected, file]
     );
   };
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [pdfFilename, setPdfFilename] = useState("");
+  const [specificPage, setSpecificPage] = useState(1); // Default to page 1
 
   const handleUploadSuccess = (
     response: string[],
@@ -266,6 +280,13 @@ const ChatModal: React.FC<ChatModalProps> = ({
       }
     }
   };
+  const handleReferenceClick = (ref: References) => {
+    // Set the filename and specific page from the reference
+    setPdfFilename(ref.filename); // Assuming ref has a filename property
+    setSpecificPage(ref.page); // Assuming ref has a page property
+    setIsPdfModalOpen(true); // Open the PDF modal
+  };
+
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
 
@@ -408,7 +429,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
       >
         <ModalContent>
           <ModalHeader className="flex justify-between items-center">
-            <span>{title || "Chat with AI Assistant"}</span>
+            <span>{modalTitle}</span>
             <div className="flex items-center space-x-2">
               {fileName && (
                 <Chip size="sm" color="primary">
@@ -458,11 +479,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
                     GPT-4o-mini
                   </SelectItem>
                 </Select>
-                <PDFModal
-                  link="https://pdfobject.com/pdf/sample.pdf"
-                  comment="Here is a sample PDF."
-                  page={3}
-                />
               </div>
               <div className="flex flex-grow overflow-hidden">
                 <div className="w-3/4 pr-4 flex flex-col">
@@ -587,6 +603,12 @@ const ChatModal: React.FC<ChatModalProps> = ({
                       </div>
                     )}
                   </div>
+                  <PDFModal
+                    isOpen={isPdfModalOpen}
+                    onClose={() => setIsPdfModalOpen(false)}
+                    filename={pdfFilename}
+                    specificPage={specificPage} // Pass the specific page number
+                  />
                   <Accordion>
                     <AccordionItem
                       key="1"
@@ -596,7 +618,12 @@ const ChatModal: React.FC<ChatModalProps> = ({
                       {references.length > 0
                         ? references.map((ref) => (
                             <div key={ref.filename}>
-                              {ref.filename} (Page {ref.page}): {ref.comment}
+                              <button
+                                key={ref.page}
+                                onClick={() => handleReferenceClick(ref)}
+                              >
+                                Open {ref.filename} - Page {ref.page}
+                              </button>
                             </div>
                           ))
                         : "No references available."}

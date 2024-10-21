@@ -34,13 +34,12 @@ const systemPrompt = `You are an AI assistant specializing in the analysis of us
 
 - Analyzing context
 - Answering user requests
-- Providing reference metadata from which the user request was generated
+- Providing reference metadata from which the user request was generated {provide as much referneces u used to give the answer}
 - Suggesting follow-up queries for users
 
 ## Response Guidelines
 
 - Use Markdown in the 'reply' field for formatting.
-- Use 'moreContext' action if additional context is needed. Specify if you need more context to adequately answer the user's question.
 - Avoid using phrases like "I'm an AI" or "As an AI."
 
 # Steps
@@ -56,9 +55,7 @@ Respond in the following JSON format:
 
 {
   "reply": "string (in Markdown)",
-  "actionRequired": {
-    "moreContext": "string{keywords to search for more context in vector db}"
-  },
+  
   "references": [{
     "filename": "string {mentioned in metadata}",
     "page": "number",
@@ -71,7 +68,6 @@ You do not need to mention the reply format as json in reply as it is already un
 
 # Notes
 
-- Include only relevant fields in 'actionRequired' if more context is needed.
 - Use 'suggestedQueries' to direct the user's next steps effectively.
 - Ensure the reply is concise and relevant to the user's question.`;
 
@@ -110,15 +106,16 @@ async function queryVectorStore(query, k = 3, filter = null) {
         });
 
       for (const [doc, score] of similaritySearchWithScoreResults) {
-        const contextEntry = `Content:\n${
-          doc.pageContent
-        }\n\nMetadata:\n${JSON.stringify(doc.metadata, null, 2)}`;
+        // Create a detailed context entry
+        const contextEntry = `
+**File Name**: ${doc.metadata.fileName}
+**Page**: ${doc.metadata.page || "N/A"}
+**Content**: 
+\`\`\`
+${doc.pageContent}
+`;
         formattedContext += contextEntry;
-        console.log(
-          `Found context (score: ${score}):\n${contextEntry}\nMetadata: ${JSON.stringify(
-            doc.metadata
-          )}\n`
-        );
+        console.log(`Found context (score: ${score}):\n${contextEntry}\n`);
       }
     }
 
@@ -128,6 +125,7 @@ async function queryVectorStore(query, k = 3, filter = null) {
     throw error;
   }
 }
+
 const llm = new ChatOpenAI({
   model: "gpt-4o-mini", // Changed from "gpt-4o-mini" to "gpt-4"
   temperature: 0.7,
