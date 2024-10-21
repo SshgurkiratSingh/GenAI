@@ -10,6 +10,7 @@ import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
 import { useSession } from "next-auth/react";
 import { API_Point } from "@/APIConfig";
+import { Progress } from "@nextui-org/react"; // Import ProgressBar from your library
 
 interface LLM {
   questions: string[];
@@ -42,7 +43,9 @@ export default function UploadModal({
 }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0); // New state to track progress
   const { data: session } = useSession();
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
@@ -67,38 +70,50 @@ export default function UploadModal({
     }
 
     setIsUploading(true);
+    setUploadProgress(0); // Reset progress bar
+
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("email", session.user.email);
 
-      const response = await fetch(
-        `${API_Point}/upload/uploadAndCreateContext`,
-        {
-          method: "POST",
-          body: formData,
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_Point}/upload/uploadAndCreateContext`, true);
+
+      // Track the progress of the upload
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const progress = (event.loaded / event.total) * 100;
+          setUploadProgress(Math.round(progress));
         }
-      );
+      };
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        alert(`Upload failed: ${errorData.message || "Unknown error"}`);
-        return;
-      }
+      xhr.onload = async () => {
+        if (xhr.status === 200) {
+          const result: ReportResponse = JSON.parse(xhr.responseText);
+          onUploadSuccess(
+            result.llm.questions,
+            result.llm.title,
+            result.fileName,
+            result.processingTime
+          );
+          onClose();
+        } else {
+          const errorData = JSON.parse(xhr.responseText);
+          alert(`Upload failed: ${errorData.message || "Unknown error"}`);
+        }
+        setIsUploading(false);
+      };
 
-      const result: ReportResponse = await response.json();
+      xhr.onerror = () => {
+        alert("Failed to upload file. Please try again.");
+        setIsUploading(false);
+      };
 
-      onUploadSuccess(
-        result.llm.questions,
-        result.llm.title,
-        result.fileName,
-        result.processingTime
-      );
-      onClose();
+      xhr.send(formData);
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("Failed to upload file. Please try again.");
-    } finally {
       setIsUploading(false);
     }
   };
@@ -117,13 +132,16 @@ export default function UploadModal({
           </ModalHeader>
           <ModalBody>
             <Input type="file" onChange={handleFileChange} accept=".pdf" />
+            {isUploading && (
+              <Progress value={uploadProgress} max={100} /> // Progress bar to display upload progress
+            )}
           </ModalBody>
           <ModalFooter>
             <Button onPress={onClose} disabled={isUploading}>
               Cancel
             </Button>
             <Button onPress={handleUpload} disabled={isUploading}>
-              {isUploading ? "Uploading..." : "Upload"}
+              {isUploading ? `Uploading... (${uploadProgress}%)` : "Upload"}
             </Button>
           </ModalFooter>
         </ModalContent>

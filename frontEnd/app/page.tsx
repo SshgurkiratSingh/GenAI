@@ -103,6 +103,12 @@ const HomePage = () => {
                 >
                   Chat with Link
                 </Button>
+                <Button 
+                  color="danger" 
+                  onClick={() => setIsChatURLModalOpen(true)} // Open the chat URL modal
+                >
+                  New Chat
+                </Button>
               </div>
             ) : (
               <div className="flex justify-center space-x-4">
