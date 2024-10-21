@@ -23,8 +23,11 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@nextui-org/dropdown";
-import { Pencil, Trash2, Download, Folder } from "lucide-react";
+import { Pencil, Trash2, Download, Folder, Upload } from "lucide-react";
 import { saveAs } from "file-saver";
+import Loading from "./Loading";
+import PDFModal from "./pdfModal";
+import UploadModal from "./upload";
 
 type AIReply = {
   reply: string;
@@ -89,6 +92,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [userFiles, setUserFiles] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
   useEffect(() => {
     if (isOpen) {
       setMessages([
@@ -98,19 +102,36 @@ const ChatModal: React.FC<ChatModalProps> = ({
       setChatHistory([]);
       setSuggestedQueries(initialSuggestedQueries);
       setReferences([]);
-      setAutoSave(false); // Reset auto-save if needed
-      setLlmModel("GPT-4o-mini"); // Reset to default model if needed
-      setContextWindow(5); // Reset to default context window
+      setAutoSave(false);
+      setLlmModel("GPT-4o-mini");
+      setContextWindow(5);
 
-      // Auto-select the fileName if it exists in userFiles
       if (fileName && userFiles.includes(fileName)) {
         setSelectedFiles([fileName]);
       } else {
         setSelectedFiles([]);
       }
-    }
-  }, [isOpen, initialSuggestedQueries, fileName, userFiles]);
 
+      // Set up a timeout to fetch user files after 1 second
+      const timer = setTimeout(() => {
+        // Only fetch user files after 1 second
+        if (session?.user?.email) {
+          axios
+            .get(`${API_Point}/list-files/${session.user.email}`)
+            .then((response) => {
+              setUserFiles(response.data);
+            })
+            .catch((error) => {
+              console.error("Error fetching user files:", error);
+            });
+        }
+      }, 1000); // 1000 milliseconds = 1 second
+
+      return () => clearTimeout(timer); // Cleanup the timer
+    }
+  }, [isOpen, initialSuggestedQueries, fileName, session]); // Removed userFiles from the dependencies
+
+  // Separate useEffect for fetching user files based on session change
   useEffect(() => {
     if (session?.user?.email) {
       axios
@@ -122,7 +143,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
           console.error("Error fetching user files:", error);
         });
     }
-  }, [session]);
+  }, [session]); // This effect only runs when the session changes
 
   const handleFileSelect = (file: string) => {
     setSelectedFiles((prevSelected) =>
@@ -130,6 +151,26 @@ const ChatModal: React.FC<ChatModalProps> = ({
         ? prevSelected.filter((f) => f !== file)
         : [...prevSelected, file]
     );
+  };
+
+  const handleUploadSuccess = (
+    response: string[],
+    title: string,
+    fileName: string,
+    processingTime: string
+  ) => {
+    console.log("File uploaded successfully:", fileName);
+    // Refresh the file list
+    if (session?.user?.email) {
+      axios
+        .get(`${API_Point}/list-files/${session.user.email}`)
+        .then((response) => {
+          setUserFiles(response.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching user files:", error);
+        });
+    }
   };
 
   useEffect(() => {
@@ -357,268 +398,291 @@ const ChatModal: React.FC<ChatModalProps> = ({
   }, [messages]);
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="full"
-      scrollBehavior="inside"
-      backdrop="blur"
-    >
-      <ModalContent>
-        <ModalHeader className="flex justify-between items-center">
-          <span>{title || "Chat with AI Assistant"}</span>
-          <div className="flex items-center space-x-2">
-            {fileName && (
-              <Chip size="sm" color="primary">
-                {fileName}
-              </Chip>
-            )}
-            <Switch
-              checked={autoSave}
-              onChange={(e) => setAutoSave(e.target.checked)}
-              size="sm"
-            >
-              Auto-save
-            </Switch>
-            <Button size="sm" onClick={handleExportChat}>
-              <Download size={16} />
-              Export Chat
-            </Button>
-          </div>
-        </ModalHeader>
-        <ModalBody>
-          <div className="flex flex-col h-full">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center space-x-2">
-                <span>Context Window:</span>
-                <Slider
-                  size="sm"
-                  step={1}
-                  minValue={3}
-                  maxValue={15}
-                  value={contextWindow}
-                  onChange={(value) => setContextWindow(value as number)}
-                  className="w-32"
-                />
-                <span>{contextWindow}</span>
-              </div>
-              <Select
-                label="LLM Model"
-                value={llmModel}
-                onChange={(e) => setLlmModel(e.target.value)}
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="full"
+        scrollBehavior="inside"
+        backdrop="blur"
+      >
+        <ModalContent>
+          <ModalHeader className="flex justify-between items-center">
+            <span>{title || "Chat with AI Assistant"}</span>
+            <div className="flex items-center space-x-2">
+              {fileName && (
+                <Chip size="sm" color="primary">
+                  {fileName}
+                </Chip>
+              )}
+              <Switch
+                checked={autoSave}
+                onChange={(e) => setAutoSave(e.target.checked)}
                 size="sm"
-                className="w-48"
               >
-                <SelectItem key="GPT-4o" value="GPT-4o">
-                  GPT-4o
-                </SelectItem>
-                <SelectItem key="GPT-4o-mini" value="GPT-4o-mini">
-                  GPT-4o-mini
-                </SelectItem>
-              </Select>
+                Auto-save
+              </Switch>
+              <Button size="sm" onClick={handleExportChat}>
+                <Download size={16} />
+                Export Chat
+              </Button>
             </div>
-            <div className="flex flex-grow overflow-hidden">
-              <div className="w-3/4 pr-4 flex flex-col">
-                <div
-                  id="chat-container"
-                  ref={chatContainerRef}
-                  className="flex-grow overflow-y-auto mb-4"
-                  style={{ maxHeight: "calc(100vh - 300px)" }}
+          </ModalHeader>
+          <ModalBody>
+            <div className="flex flex-col h-full">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center space-x-2">
+                  <span>Context Window:</span>
+                  <Slider
+                    size="sm"
+                    step={1}
+                    minValue={3}
+                    maxValue={15}
+                    value={contextWindow}
+                    onChange={(value) => setContextWindow(value as number)}
+                    className="w-32"
+                  />
+                  <span>{contextWindow}</span>
+                </div>
+                <Select
+                  label="LLM Model"
+                  value={llmModel}
+                  onChange={(e) => setLlmModel(e.target.value)}
+                  size="sm"
+                  className="w-48"
                 >
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex mb-4 ${
-                        msg.sender === "user" ? "justify-end" : "justify-start"
-                      }`}
-                    >
+                  <SelectItem key="GPT-4o" value="GPT-4o">
+                    GPT-4o
+                  </SelectItem>
+                  <SelectItem key="GPT-4o-mini" value="GPT-4o-mini">
+                    GPT-4o-mini
+                  </SelectItem>
+                </Select>
+                <PDFModal
+                  link="https://pdfobject.com/pdf/sample.pdf"
+                  comment="Here is a sample PDF."
+                  page={3}
+                />
+              </div>
+              <div className="flex flex-grow overflow-hidden">
+                <div className="w-3/4 pr-4 flex flex-col">
+                  <div
+                    id="chat-container"
+                    ref={chatContainerRef}
+                    className="flex-grow overflow-y-auto mb-4"
+                    style={{ maxHeight: "calc(100vh - 300px)" }}
+                  >
+                    {messages.map((msg) => (
                       <div
-                        className={`flex items-start ${
+                        key={msg.id}
+                        className={`flex mb-4 ${
                           msg.sender === "user"
-                            ? "flex-row-reverse"
-                            : "flex-row"
+                            ? "justify-end"
+                            : "justify-start"
                         }`}
                       >
-                        {msg.sender === "user" ? (
-                          <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
-                            {userInitial}
-                          </div>
-                        ) : (
-                          <div className="bg-gray-200 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold">
-                            {"A"}
-                          </div>
-                        )}
-
                         <div
-                          className={`mx-2 p-2 rounded-lg ${
+                          className={`flex items-start ${
                             msg.sender === "user"
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-200 text-black"
+                              ? "flex-row-reverse"
+                              : "flex-row"
                           }`}
                         >
-                          {editingMessageId === msg.id ? (
-                            <div>
-                              <textarea
-                                value={editInput}
-                                onChange={(e) => setEditInput(e.target.value)}
-                                className="w-full p-2 border rounded resize-none"
-                                rows={3}
-                              />
-                              <div className="mt-2 flex justify-end">
-                                <Button
-                                  size="sm"
-                                  color="primary"
-                                  onClick={() => handleSaveEdit(msg.id)}
-                                >
-                                  Save
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  color="secondary"
-                                  onClick={() => setEditingMessageId(null)}
-                                  className="ml-2"
-                                >
-                                  Cancel
-                                </Button>
-                              </div>
+                          {msg.sender === "user" ? (
+                            <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                              {userInitial}
                             </div>
                           ) : (
-                            <div>
-                              {msg.sender === "ai" ? (
-                                <ReactMarkdown>{msg.text}</ReactMarkdown>
-                              ) : (
-                                msg.text
-                              )}
-                              {msg.isEdited && (
-                                <span className="text-xs italic ml-2">
-                                  (edited)
-                                </span>
-                              )}
+                            <div className="bg-gray-200 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                              {"A"}
                             </div>
                           )}
-                        </div>
 
-                        {msg.sender === "user" &&
-                          editingMessageId !== msg.id && (
-                            <Dropdown>
-                              <DropdownTrigger>
-                                <Button size="sm" variant="light">
-                                  •••
-                                </Button>
-                              </DropdownTrigger>
-                              <DropdownMenu aria-label="Message actions">
-                                <DropdownItem
-                                  key="edit"
-                                  startContent={<Pencil size={16} />}
-                                  onClick={() => handleEditMessage(msg.id)}
-                                >
-                                  Edit
-                                </DropdownItem>
-                                <DropdownItem
-                                  key="delete"
-                                  className="text-danger"
-                                  color="danger"
-                                  startContent={<Trash2 size={16} />}
-                                  onClick={() => handleDeleteMessage(msg.id)}
-                                >
-                                  Delete
-                                </DropdownItem>
-                              </DropdownMenu>
-                            </Dropdown>
-                          )}
+                          <div
+                            className={`mx-2 p-2 rounded-lg ${
+                              msg.sender === "user"
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200 text-black"
+                            }`}
+                          >
+                            {editingMessageId === msg.id ? (
+                              <div>
+                                <textarea
+                                  value={editInput}
+                                  onChange={(e) => setEditInput(e.target.value)}
+                                  className="w-full p-2 border rounded resize-none"
+                                  rows={3}
+                                />
+                                <div className="mt-2 flex justify-end">
+                                  <Button
+                                    size="sm"
+                                    color="primary"
+                                    onClick={() => handleSaveEdit(msg.id)}
+                                  >
+                                    Save
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    color="secondary"
+                                    onClick={() => setEditingMessageId(null)}
+                                    className="ml-2"
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div>
+                                {msg.sender === "ai" ? (
+                                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                ) : (
+                                  msg.text
+                                )}
+                                {msg.isEdited && (
+                                  <span className="text-xs italic ml-2">
+                                    (edited)
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {msg.sender === "user" &&
+                            editingMessageId !== msg.id && (
+                              <Dropdown>
+                                <DropdownTrigger>
+                                  <Button size="sm" variant="light">
+                                    •••
+                                  </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu aria-label="Message actions">
+                                  <DropdownItem
+                                    key="edit"
+                                    startContent={<Pencil size={16} />}
+                                    onClick={() => handleEditMessage(msg.id)}
+                                  >
+                                    Edit
+                                  </DropdownItem>
+                                  <DropdownItem
+                                    key="delete"
+                                    className="text-danger"
+                                    color="danger"
+                                    startContent={<Trash2 size={16} />}
+                                    onClick={() => handleDeleteMessage(msg.id)}
+                                  >
+                                    Delete
+                                  </DropdownItem>
+                                </DropdownMenu>
+                              </Dropdown>
+                            )}
+                        </div>
+                      </div>
+                    ))}
+                    {isTyping && (
+                      <div className="flex justify-start">
+                        <div className="flex items-center bg-gray-200 text-black rounded-lg p-2">
+                          <span className="typing-indicator"></span>
+                          AI is typing... <Loading />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <Accordion>
+                    <AccordionItem
+                      key="1"
+                      aria-label="Accordion 1"
+                      title="References"
+                    >
+                      {references.length > 0
+                        ? references.map((ref) => (
+                            <div key={ref.filename}>
+                              {ref.filename} (Page {ref.page}): {ref.comment}
+                            </div>
+                          ))
+                        : "No references available."}
+                    </AccordionItem>
+                  </Accordion>
+                </div>
+                <div
+                  className="w-1/4 border-l pl-4 overflow-y-auto"
+                  style={{ maxHeight: "calc(100vh - 300px)" }}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="font-medium">Your Files (Expand Context)</p>
+                    <Button
+                      size="sm"
+                      onClick={() => setIsUploadModalOpen(true)}
+                      startContent={<Upload size={16} />}
+                    >
+                      Upload
+                    </Button>
+                  </div>
+                  {userFiles.map((file) => (
+                    <div key={file} className="flex items-center mb-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedFiles.includes(file)}
+                        onChange={() => handleFileSelect(file)}
+                        className="mr-2"
+                      />
+                      <div className="flex items-center">
+                        <Folder size={16} className="mr-2" /> {file}
                       </div>
                     </div>
                   ))}
-                  {isTyping && (
-                    <div className="flex justify-start">
-                      <div className="flex items-center bg-gray-200 text-black rounded-lg p-2">
-                        <span className="typing-indicator"></span>
-                        AI is typing...
-                      </div>
-                    </div>
-                  )}
                 </div>
-                <Accordion>
-                  <AccordionItem
-                    key="1"
-                    aria-label="Accordion 1"
-                    title="References"
-                  >
-                    {references.length > 0
-                      ? references.map((ref) => (
-                          <div key={ref.filename}>
-                            {ref.filename} (Page {ref.page}): {ref.comment}
-                          </div>
-                        ))
-                      : "No references available."}
-                  </AccordionItem>
-                </Accordion>
-              </div>
-              <div
-                className="w-1/4 border-l pl-4 overflow-y-auto"
-                style={{ maxHeight: "calc(100vh - 300px)" }}
-              >
-                <p className="font-medium mb-2">Your Files (Expand Context)</p>
-                {userFiles.map((file) => (
-                  <div key={file} className="flex items-center mb-1">
-                    <input
-                      type="checkbox"
-                      checked={selectedFiles.includes(file)}
-                      onChange={() => handleFileSelect(file)}
-                      className="mr-2"
-                    />
-                    <div className="flex items-center">
-                      <Folder size={16} className="mr-2" /> {file}
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
-          </div>
-        </ModalBody>
-        <ModalFooter>
-          <div className="w-full flex flex-col">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={handleTextareaChange}
-              onKeyDown={handleTextareaKeyDown}
-              placeholder="Type your message..."
-              rows={1}
-              className="w-full p-2 border rounded resize-none max-h-40 overflow-hidden"
-              style={{ height: "auto" }}
-              maxLength={500}
-            />
-            <div className="flex justify-between items-center mt-2">
-              <span className="text-gray-500 text-sm">
-                Press Enter to send, Shift+Enter for a new line.
-              </span>
-              <Button
-                color="primary"
-                onClick={handleSend}
-                disabled={!input.trim()}
-              >
-                Send
-              </Button>
-            </div>
+          </ModalBody>
+          <ModalFooter>
+            <div className="w-full flex flex-col">
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={handleTextareaChange}
+                onKeyDown={handleTextareaKeyDown}
+                placeholder="Type your message..."
+                rows={1}
+                className="w-full p-2 border rounded resize-none max-h-40 overflow-hidden"
+                style={{ height: "auto" }}
+                maxLength={500}
+              />
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-gray-500 text-sm">
+                  Press Enter to send, Shift+Enter for a new line.
+                </span>
+                <Button
+                  color="primary"
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                >
+                  Send
+                </Button>
+              </div>
 
-            {suggestedQueries.length > 0 && (
-              <div className="mt-2 flex flex-wrap">
-                {suggestedQueries.map((query, idx) => (
-                  <Chip
-                    key={idx}
-                    onClick={() => handleSuggestedQueryClick(query)}
-                    className="mr-2 mb-2"
-                  >
-                    {query}
-                  </Chip>
-                ))}
-              </div>
-            )}
-          </div>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+              {suggestedQueries.length > 0 && (
+                <div className="mt-2 flex flex-wrap">
+                  {suggestedQueries.map((query, idx) => (
+                    <Chip
+                      key={idx}
+                      onClick={() => handleSuggestedQueryClick(query)}
+                      className="mr-2 mb-2"
+                    >
+                      {query}
+                    </Chip>
+                  ))}
+                </div>
+              )}
+            </div>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
+      />
+    </>
   );
 };
 
