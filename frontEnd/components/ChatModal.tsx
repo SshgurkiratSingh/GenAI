@@ -23,7 +23,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@nextui-org/dropdown";
-import { Pencil, Trash2, Download } from "lucide-react";
+import { Pencil, Trash2, Download, Folder } from "lucide-react";
 import { saveAs } from "file-saver";
 
 type AIReply = {
@@ -31,7 +31,7 @@ type AIReply = {
   actionRequired?: {
     moreContext?: string;
   };
-  references: string;
+  references: References[];
   suggestedQueries: string[];
 };
 
@@ -39,9 +39,14 @@ interface ChatMessage {
   id: number;
   text: string;
   sender: "user" | "ai";
-  references?: string;
+  references?: References[];
   isEdited?: boolean;
 }
+type References = {
+  filename: string;
+  page: number;
+  comment: string;
+};
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -74,32 +79,82 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatHistory, setChatHistory] = useState<string[]>([]);
   const [autoSave, setAutoSave] = useState<boolean>(false);
-  const [references, setReferences] = useState<string>("");
-  const [contextWindow, setContextWindow] = useState<number>(5);
+  const [references, setReferences] = useState<References[]>([]);
+
+  const [contextWindow, setContextWindow] = useState<number>(3);
   const [llmModel, setLlmModel] = useState<string>("GPT-4o-mini");
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editInput, setEditInput] = useState<string>("");
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [userFiles, setUserFiles] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  useEffect(() => {
+    if (isOpen) {
+      setMessages([
+        { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
+      ]);
+      setInput("");
+      setChatHistory([]);
+      setSuggestedQueries(initialSuggestedQueries);
+      setReferences([]);
+      setAutoSave(false); // Reset auto-save if needed
+      setLlmModel("GPT-4o-mini"); // Reset to default model if needed
+      setContextWindow(5); // Reset to default context window
+
+      // Auto-select the fileName if it exists in userFiles
+      if (fileName && userFiles.includes(fileName)) {
+        setSelectedFiles([fileName]);
+      } else {
+        setSelectedFiles([]);
+      }
+    }
+  }, [isOpen, initialSuggestedQueries, fileName, userFiles]);
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      axios
+        .get(`${API_Point}/list-files/${session.user.email}`)
+        .then((response) => {
+          setUserFiles(response.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching user files:", error);
+        });
+    }
+  }, [session]);
+
+  const handleFileSelect = (file: string) => {
+    setSelectedFiles((prevSelected) =>
+      prevSelected.includes(file)
+        ? prevSelected.filter((f) => f !== file)
+        : [...prevSelected, file]
+    );
+  };
 
   useEffect(() => {
     setSuggestedQueries(initialSuggestedQueries);
   }, [initialSuggestedQueries]);
 
-  const updateChatFile = async () => {
+  const updateChatFile = async (currentMessage: string | null = null) => {
     if (!autoSave) return;
+
+    // Prepare data for saving, including the current message if provided
+    const chatData = {
+      chatHistory: currentMessage
+        ? [...chatHistory, currentMessage]
+        : chatHistory,
+      fileName,
+      title,
+      contextWindow,
+      llmModel,
+    };
 
     try {
       await axios.post(`${API_Point}/files/updateChat`, {
         email: session?.user?.email,
         fname: title,
-        data: JSON.stringify({
-          chatHistory,
-          fileName,
-          title,
-          contextWindow,
-          llmModel,
-        }),
+        data: JSON.stringify(chatData),
       });
     } catch (error) {
       console.error("Error updating chat file:", error);
@@ -124,8 +179,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
             message: input,
             history: chatHistory.slice(-contextWindow * 2),
             email: session?.user?.email,
-            fileName: fileName,
+            selectedFiles: selectedFiles,
             llmModel: llmModel,
+            contextWindow: contextWindow,
           },
           { headers: { "Content-Type": "application/json" } }
         );
@@ -148,7 +204,8 @@ const ChatModal: React.FC<ChatModalProps> = ({
         const updatedHistory = [...chatHistory, input, aiResponse.reply];
         setChatHistory(updatedHistory);
 
-        await updateChatFile();
+        // Update chat file with current user message included
+        await updateChatFile(input);
 
         setIsTyping(false);
         if (audioRef.current) {
@@ -168,7 +225,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
       }
     }
   };
-
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
 
@@ -331,154 +387,194 @@ const ChatModal: React.FC<ChatModalProps> = ({
           </div>
         </ModalHeader>
         <ModalBody>
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center space-x-2">
-              <span>Context Window:</span>
-              <Slider
+          <div className="flex flex-col h-full">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center space-x-2">
+                <span>Context Window:</span>
+                <Slider
+                  size="sm"
+                  step={1}
+                  minValue={3}
+                  maxValue={15}
+                  value={contextWindow}
+                  onChange={(value) => setContextWindow(value as number)}
+                  className="w-32"
+                />
+                <span>{contextWindow}</span>
+              </div>
+              <Select
+                label="LLM Model"
+                value={llmModel}
+                onChange={(e) => setLlmModel(e.target.value)}
                 size="sm"
-                step={1}
-                minValue={5}
-                maxValue={15}
-                value={contextWindow}
-                onChange={(value) => setContextWindow(value as number)}
-                className="w-32"
-              />
-              <span>{contextWindow}</span>
-            </div>
-            <Select
-              label="LLM Model"
-              value={llmModel}
-              onChange={(e) => setLlmModel(e.target.value)}
-              size="sm"
-              className="w-48"
-            >
-              <SelectItem key="GPT-4o" value="GPT-4o">
-                GPT-4o
-              </SelectItem>
-              <SelectItem key="GPT-4o-mini" value="GPT-4o-mini">
-                GPT-4o-mini
-              </SelectItem>
-            </Select>
-          </div>
-          <div
-            id="chat-container"
-            ref={chatContainerRef}
-            className="overflow-y-auto "
-          >
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex mb-4 ${
-                  msg.sender === "user" ? "justify-end" : "justify-start"
-                }`}
+                className="w-48"
               >
+                <SelectItem key="GPT-4o" value="GPT-4o">
+                  GPT-4o
+                </SelectItem>
+                <SelectItem key="GPT-4o-mini" value="GPT-4o-mini">
+                  GPT-4o-mini
+                </SelectItem>
+              </Select>
+            </div>
+            <div className="flex flex-grow overflow-hidden">
+              <div className="w-3/4 pr-4 flex flex-col">
                 <div
-                  className={`flex items-start ${
-                    msg.sender === "user" ? "flex-row-reverse" : "flex-row"
-                  }`}
+                  id="chat-container"
+                  ref={chatContainerRef}
+                  className="flex-grow overflow-y-auto mb-4"
+                  style={{ maxHeight: "calc(100vh - 300px)" }}
                 >
-                  {msg.sender === "user" ? (
-                    <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
-                      {userInitial}
-                    </div>
-                  ) : (
-                    <div className="bg-gray-200 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold">
-                      {"A"}
-                    </div>
-                  )}
-
-                  <div
-                    className={`mx-2 p-2 rounded-lg ${
-                      msg.sender === "user"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-200 text-black"
-                    }`}
-                  >
-                    {editingMessageId === msg.id ? (
-                      <div>
-                        <textarea
-                          value={editInput}
-                          onChange={(e) => setEditInput(e.target.value)}
-                          className="w-full p-2 border rounded resize-none"
-                          rows={3}
-                        />
-                        <div className="mt-2 flex justify-end">
-                          <Button
-                            size="sm"
-                            color="primary"
-                            onClick={() => handleSaveEdit(msg.id)}
-                          >
-                            Save
-                          </Button>
-                          <Button
-                            size="sm"
-                            color="secondary"
-                            onClick={() => setEditingMessageId(null)}
-                            className="ml-2"
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {msg.sender === "ai" ? (
-                          <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex mb-4 ${
+                        msg.sender === "user" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`flex items-start ${
+                          msg.sender === "user"
+                            ? "flex-row-reverse"
+                            : "flex-row"
+                        }`}
+                      >
+                        {msg.sender === "user" ? (
+                          <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                            {userInitial}
+                          </div>
                         ) : (
-                          msg.text
+                          <div className="bg-gray-200 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                            {"A"}
+                          </div>
                         )}
-                        {msg.isEdited && (
-                          <span className="text-xs italic ml-2">(edited)</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
 
-                  {msg.sender === "user" && editingMessageId !== msg.id && (
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button size="sm" variant="light">
-                          •••
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu aria-label="Message actions">
-                        <DropdownItem
-                          key="edit"
-                          startContent={<Pencil size={16} />}
-                          onClick={() => handleEditMessage(msg.id)}
+                        <div
+                          className={`mx-2 p-2 rounded-lg ${
+                            msg.sender === "user"
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-200 text-black"
+                          }`}
                         >
-                          Edit
-                        </DropdownItem>
-                        <DropdownItem
-                          key="delete"
-                          className="text-danger"
-                          color="danger"
-                          startContent={<Trash2 size={16} />}
-                          onClick={() => handleDeleteMessage(msg.id)}
-                        >
-                          Delete
-                        </DropdownItem>
-                      </DropdownMenu>
-                    </Dropdown>
+                          {editingMessageId === msg.id ? (
+                            <div>
+                              <textarea
+                                value={editInput}
+                                onChange={(e) => setEditInput(e.target.value)}
+                                className="w-full p-2 border rounded resize-none"
+                                rows={3}
+                              />
+                              <div className="mt-2 flex justify-end">
+                                <Button
+                                  size="sm"
+                                  color="primary"
+                                  onClick={() => handleSaveEdit(msg.id)}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  color="secondary"
+                                  onClick={() => setEditingMessageId(null)}
+                                  className="ml-2"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              {msg.sender === "ai" ? (
+                                <ReactMarkdown>{msg.text}</ReactMarkdown>
+                              ) : (
+                                msg.text
+                              )}
+                              {msg.isEdited && (
+                                <span className="text-xs italic ml-2">
+                                  (edited)
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {msg.sender === "user" &&
+                          editingMessageId !== msg.id && (
+                            <Dropdown>
+                              <DropdownTrigger>
+                                <Button size="sm" variant="light">
+                                  •••
+                                </Button>
+                              </DropdownTrigger>
+                              <DropdownMenu aria-label="Message actions">
+                                <DropdownItem
+                                  key="edit"
+                                  startContent={<Pencil size={16} />}
+                                  onClick={() => handleEditMessage(msg.id)}
+                                >
+                                  Edit
+                                </DropdownItem>
+                                <DropdownItem
+                                  key="delete"
+                                  className="text-danger"
+                                  color="danger"
+                                  startContent={<Trash2 size={16} />}
+                                  onClick={() => handleDeleteMessage(msg.id)}
+                                >
+                                  Delete
+                                </DropdownItem>
+                              </DropdownMenu>
+                            </Dropdown>
+                          )}
+                      </div>
+                    </div>
+                  ))}
+                  {isTyping && (
+                    <div className="flex justify-start">
+                      <div className="flex items-center bg-gray-200 text-black rounded-lg p-2">
+                        <span className="typing-indicator"></span>
+                        AI is typing...
+                      </div>
+                    </div>
                   )}
                 </div>
+                <Accordion>
+                  <AccordionItem
+                    key="1"
+                    aria-label="Accordion 1"
+                    title="References"
+                  >
+                    {references.length > 0
+                      ? references.map((ref) => (
+                          <div key={ref.filename}>
+                            {ref.filename} (Page {ref.page}): {ref.comment}
+                          </div>
+                        ))
+                      : "No references available."}
+                  </AccordionItem>
+                </Accordion>
               </div>
-            ))}
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="flex items-center bg-gray-200 text-black rounded-lg p-2">
-                  <span className="typing-indicator"></span>
-                  AI is typing...
-                </div>
+              <div
+                className="w-1/4 border-l pl-4 overflow-y-auto"
+                style={{ maxHeight: "calc(100vh - 300px)" }}
+              >
+                <p className="font-medium mb-2">Your Files (Expand Context)</p>
+                {userFiles.map((file) => (
+                  <div key={file} className="flex items-center mb-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedFiles.includes(file)}
+                      onChange={() => handleFileSelect(file)}
+                      className="mr-2"
+                    />
+                    <div className="flex items-center">
+                      <Folder size={16} className="mr-2" /> {file}
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
           </div>
-
-          <Accordion>
-            <AccordionItem key="1" aria-label="Accordion 1" title="References">
-              {references || "No references available."}
-            </AccordionItem>
-          </Accordion>
         </ModalBody>
         <ModalFooter>
           <div className="w-full flex flex-col">
@@ -522,9 +618,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
           </div>
         </ModalFooter>
       </ModalContent>
-      <audio ref={audioRef} src="/notification-sound.mp3" preload="auto">
-        <track kind="captions" srcLang="en" label="No captions available" />
-      </audio>
     </Modal>
   );
 };

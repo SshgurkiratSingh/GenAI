@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const path = require("path");
+
 const pdf = require("pdf-parse");
 const multer = require("multer");
 const { RecursiveCharacterTextSplitter } = require("langchain/text_splitter");
@@ -187,7 +188,7 @@ router.post(
             fileName: file.originalname,
             userEmail: userEmail,
             lineNumber: index + 1,
-            label: label,
+            // label: label,
             page: estimatedPage,
             totalPages: totalPages,
           },
@@ -297,5 +298,7 @@ async function queryVectorStore(query, k = 5, filter = null) {
   }
   return similaritySearchWithScoreResults;
 }
+
+// New route to access files uploaded by users
 
 module.exports = router;

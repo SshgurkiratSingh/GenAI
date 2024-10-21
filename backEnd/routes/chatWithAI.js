@@ -43,27 +43,33 @@ const systemPrompt = `You are an AI assistant specializing in the analysis of us
 - Use 'moreContext' action if additional context is needed. Specify if you need more context to adequately answer the user's question.
 - Avoid using phrases like "I'm an AI" or "As an AI."
 
-# Output Format
-
-Respond in the following JSON format:
-{
-  "reply": "string (in Markdown)",
-  "actionRequired": {
-    "moreContext": "string{keywords to search for more context in vector db}"
-  },
-  "references": ["inlude metadata info here mention info like page no line no and label it appropriately,it should be a string"],
-  "suggestedQueries": ["string"]
-}
-You do not need to mention the reply format as \`\`\` json in reply as it is already understood
-
-## Steps
+# Steps
 
 1. **Analysis**: Thoroughly analyze the user's question and the context provided. Determine if additional context is needed.
 2. **Reply Composition**: Compose an informative and helpful reply using Markdown for better clarity and formatting.
 3. **Reference Identification**: Identify and include any references that are relevant to the user's question.
 4. **Suggested Queries**: Suggest further queries that could help the user explore their question in more depth or reach a better understanding.
 
-## Notes
+# Output Format
+
+Respond in the following JSON format:
+
+{
+  "reply": "string (in Markdown)",
+  "actionRequired": {
+    "moreContext": "string{keywords to search for more context in vector db}"
+  },
+  "references": [{
+    "filename": "string {mentioned in metadata}",
+    "page": "number",
+    "comment": "string"
+  }],
+  "suggestedQueries": ["string"]
+}
+
+You do not need to mention the reply format as json in reply as it is already understood.
+
+# Notes
 
 - Include only relevant fields in 'actionRequired' if more context is needed.
 - Use 'suggestedQueries' to direct the user's next steps effectively.
@@ -94,18 +100,26 @@ async function queryVectorStore(query, k = 3, filter = null) {
     console.log(`Querying vector store with: "${query}"`);
     const store = await initVectorStore();
 
-    const similaritySearchWithScoreResults =
-      await store.similaritySearchWithScore(query, k, filter || {});
-
     let formattedContext = "";
-    for (const [doc, score] of similaritySearchWithScoreResults) {
-      const contextEntry = `${doc.pageContent}\n`;
-      formattedContext += contextEntry;
-      console.log(
-        `Found context (score: ${score}):\n${contextEntry}\nMetadata: ${JSON.stringify(
-          doc.metadata
-        )}\n`
-      );
+
+    for (const file of filter.fileName.$in) {
+      const similaritySearchWithScoreResults =
+        await store.similaritySearchWithScore(query, k, {
+          userEmail: filter.userEmail,
+          fileName: file,
+        });
+
+      for (const [doc, score] of similaritySearchWithScoreResults) {
+        const contextEntry = `Content:\n${
+          doc.pageContent
+        }\n\nMetadata:\n${JSON.stringify(doc.metadata, null, 2)}`;
+        formattedContext += contextEntry;
+        console.log(
+          `Found context (score: ${score}):\n${contextEntry}\nMetadata: ${JSON.stringify(
+            doc.metadata
+          )}\n`
+        );
+      }
     }
 
     return formattedContext.trim();
@@ -114,7 +128,6 @@ async function queryVectorStore(query, k = 3, filter = null) {
     throw error;
   }
 }
-
 const llm = new ChatOpenAI({
   model: "gpt-4o-mini", // Changed from "gpt-4o-mini" to "gpt-4"
   temperature: 0.7,
@@ -135,30 +148,43 @@ router.post("/chat", async (req, res) => {
   try {
     console.log("Received chat request");
 
-    const { message, history, email, fileName } = req.body;
-    console.log(fileName);
+    const { message, history, email, selectedFiles, llmModel, contextWindow } =
+      req.body;
+    console.log(`Selected files: ${JSON.stringify(selectedFiles)}`);
+    console.log(`LLM Model: ${llmModel}`);
+    console.log(`Context Window: ${contextWindow}`);
+
     if (!message) {
       console.error("Missing message in request body");
       return res.status(400).json({ error: "Message is required" });
     }
 
-    console.log(
-      `Processing request for email: ${email}, fileName: ${fileName}`
-    );
+    console.log(`Processing request for email: ${email}`);
     console.log(`User message: "${message}"`);
 
     // Query the vector store for relevant context
-    const context = await queryVectorStore(message, 5, {
+    const context = await queryVectorStore(message, contextWindow, {
       userEmail: email,
-      fileName: fileName,
+      fileName: { $in: selectedFiles },
     });
 
     // Prepare the chat history
     const formattedHistory = history ? history.join("\n") : "";
     console.log("Formatted history:", formattedHistory);
 
+    // Select the appropriate LLM model
+    let selectedModel;
+    if (llmModel === "GPT-4o") {
+      selectedModel = new ChatOpenAI({ temperature: 0.3, model: "gpt-4o" });
+    } else {
+      selectedModel = new ChatOpenAI({
+        temperature: 0.3,
+        model: "gpt-4o-mini",
+      });
+    }
+
     // Create the chat model with the prepared prompt
-    const chain = prompt.pipe(llm);
+    const chain = prompt.pipe(selectedModel);
 
     console.log("Generating AI response...");
     // Generate the response
