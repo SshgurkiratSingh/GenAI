@@ -176,6 +176,8 @@ This document provides an overview of the frontend components and features imple
 
 ### 1. ChatModal (ChatModal.tsx)
 
+![Chat Modal](images/ChatMenu.png)
+
 - Implements a full-screen chat interface
 - Supports real-time chat with AI
 - Features:
@@ -213,6 +215,8 @@ This document provides an overview of the frontend components and features imple
 
 ### 4. ChatHistoryTable (page.tsx in app/chat directory)
 
+![Chat History](images/ChatHistory.png)
+
 - Displays user's chat history and uploaded files
 - Features:
   - Pagination for chat files and uploaded files
@@ -220,23 +224,16 @@ This document provides an overview of the frontend components and features imple
   - File management (view, delete)
   - Separate tables for chat files and uploaded files
 
-### 5. Config Portal (page.tsx in app/config directory)
+### 5. AIReferenceModal (AIReferenceModal.tsx)
 
-- Configuration interface for the application
-- Features:
-  - ESP Master Node Control
-  - Edit configuration
-  - Identity check
-  - History logs display with UUID generation
-
-### 6. AIReferenceModal (AIReferenceModal.tsx)
+![Chat History](images/GENAIReference.png)
 
 - Modal for generating AI references
 - Features:
   - Displays question and answer
   - Generates references based on user files
 
-### 7. LoginModal and RegisterModal
+### 6. LoginModal and RegisterModal
 
 - User authentication interfaces
 - Features:
@@ -244,7 +241,9 @@ This document provides an overview of the frontend components and features imple
   - Error handling
   - Switching between login and registration
 
-### 8. UploadModal (upload.tsx)
+### 7. UploadModal (upload.tsx)
+
+![File List](images/FileMenu.png)
 
 - Interface for file uploading
 - Features:
@@ -252,14 +251,7 @@ This document provides an overview of the frontend components and features imple
   - Progress tracking
   - Error handling
 
-### 9. CollaborativePage (page.tsx in app/Collaborative directory)
-
-- Interface for collaborative features
-- Features:
-  - Chat with AI Assistant
-  - Refresh data functionality
-
-### 10. PDFModal (pdfModal.tsx)
+### 8. PDFModal (pdfModal.tsx)
 
 ![Pdf Modal](images/pdfReference.png)
 
