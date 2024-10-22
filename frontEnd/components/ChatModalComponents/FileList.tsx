@@ -15,7 +15,7 @@ const FileList = ({
   onUploadClick,
 }: FileListProps) => {
   return (
-    <div className="w-1/4 border-l pl-4 overflow-y-auto">
+    <div className="w-full md:w-1/4 border-l pl-4 overflow-y-auto">
       <div className="flex justify-between items-center mb-2">
         <p className="font-medium">Your Files (Expand Context)</p>
         <Button

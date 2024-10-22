@@ -17,7 +17,7 @@ const ChatHeader = ({
   onExport,
 }: ChatHeaderProps) => {
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
       <span>{modalTitle}</span>
       <div className="flex items-center space-x-2">
         {fileName && (

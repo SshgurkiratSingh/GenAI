@@ -18,7 +18,7 @@ const ChatInput = ({
   onSuggestedQueryClick,
 }: ChatInputProps) => {
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col space-y-2">
       <textarea
         value={input}
         onChange={onInputChange}
@@ -29,7 +29,7 @@ const ChatInput = ({
         style={{ height: "auto" }}
         maxLength={500}
       />
-      <div className="flex justify-between items-center mt-2">
+      <div className="flex flex-col md:flex-row justify-between items-center mt-2 space-y-2 md:space-y-0">
         <span className="text-gray-500 text-sm">
           Press Enter to send, Shift+Enter for a new line.
         </span>

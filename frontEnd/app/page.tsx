@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react"; // Import signOut
 import { Card, CardBody } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
 import { MdOutlineFileUpload } from "react-icons/md";
@@ -10,8 +10,8 @@ import UploadModal from "@/components/upload";
 import ChatModal from "@/components/ChatModal";
 import LoginModal from "@/components/LoginModal";
 import RegisterModal from "@/components/RegisterModal";
-import ChatURLModal from "@/components/ChatWithLink"; // Import the new ChatURLModal
-import Link from "next/link"; // Import Next.js Link
+import ChatURLModal from "@/components/ChatWithLink";
+import Link from "next/link";
 
 const HomePage = () => {
   const { data: session } = useSession();
@@ -19,20 +19,17 @@ const HomePage = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isChatURLModalOpen, setIsChatURLModalOpen] = useState(false);
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false); // Add state for Chat modal
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [uploadedQuestions, setUploadedQuestions] = useState<string[]>([]);
   const [uploadedTitle, setUploadedTitle] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
   const [processingTime, setProcessingTime] = useState<string>("");
   const [text, setText] = useState("");
-  const [chatUrl, setChatUrl] = useState<string>(""); // Store the submitted URL
+  const [chatUrl, setChatUrl] = useState<string>("");
 
   useEffect(() => {
     const username = session?.user?.name || "Guest";
-    const fullText = session
-      ? `Welcome, ${username}!`
-      : "Welcome to PDF Reader!";
-
+    const fullText = session ? `Welcome, ${username}!` : "Welcome to PDF Reader!";
     setText(fullText);
   }, [session]);
 
@@ -65,12 +62,17 @@ const HomePage = () => {
   };
 
   const handleChatWithLink = (url: string) => {
-    setChatUrl(url); // Store the URL
-    setIsChatURLModalOpen(true); // Open the chat URL modal
+    setChatUrl(url);
+    setIsChatURLModalOpen(true);
   };
 
   const handleNewChat = () => {
-    setIsChatModalOpen(true); // Open the chat modal
+    setIsChatModalOpen(true);
+  };
+
+  // Function to handle logout
+  const handleLogout = () => {
+    signOut(); // Call signOut from next-auth
   };
 
   return (
@@ -107,7 +109,6 @@ const HomePage = () => {
                   Upload File
                 </Button>
 
-                {/* Link Browse History to the /chat route */}
                 <Link href="/chat">
                   <Button
                     color="danger"
@@ -118,13 +119,21 @@ const HomePage = () => {
                   </Button>
                 </Link>
 
-                {/* Chat with Link button */}
                 <Button
                   color="primary"
                   className="w-full sm:w-auto"
-                  onClick={() => setIsChatURLModalOpen(true)} // Open the chat URL modal
+                  onClick={() => setIsChatURLModalOpen(true)}
                 >
                   Chat with Link
+                </Button>
+
+                {/* Logout Button */}
+                <Button
+                  color="secondary"
+                  className="w-full sm:w-auto"
+                  onClick={handleLogout} // Call the logout function
+                >
+                  Log Out
                 </Button>
               </>
             ) : (
@@ -170,21 +179,18 @@ const HomePage = () => {
         isNewChat={isChatModalOpen}
       />
 
-      {/* Login Modal */}
       <LoginModal
         visible={isLoginModalOpen}
         onClose={handleCloseLoginModal}
         onRegisterClick={handleSignUpClick}
       />
 
-      {/* Register Modal */}
       <RegisterModal
         visible={isRegisterModalOpen}
         onClose={handleCloseRegisterModal}
         onLoginClick={handleLoginClick}
       />
 
-      {/* Chat URL Modal */}
       <ChatURLModal
         isOpen={isChatURLModalOpen}
         onClose={() => setIsChatURLModalOpen(false)}
