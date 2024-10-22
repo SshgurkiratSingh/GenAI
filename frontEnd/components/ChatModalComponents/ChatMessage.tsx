@@ -41,7 +41,7 @@ const ChatMessageComp = ({
       <div
         className={`flex items-start ${
           message.sender === "user" ? "flex-row-reverse" : "flex-row"
-        }`}
+        } space-x-2`}
       >
         <div
           className={`${
@@ -57,7 +57,7 @@ const ChatMessageComp = ({
             message.sender === "user"
               ? "bg-blue-500 text-white"
               : "bg-gray-200 text-black"
-          }`}
+          } w-full md:max-w-md`}
         >
           {isEditing ? (
             <div>
