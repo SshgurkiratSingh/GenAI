@@ -133,7 +133,7 @@ export default function UploadModal({
           <ModalBody>
             <Input type="file" onChange={handleFileChange} accept=".pdf" />
             {isUploading && (
-              <Progress value={uploadProgress} max={100} /> // Progress bar to display upload progress
+              <Progress value={uploadProgress} maxValue={100} /> // Progress bar to display upload progress
             )}
           </ModalBody>
           <ModalFooter>

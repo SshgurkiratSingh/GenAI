@@ -15,7 +15,6 @@ import { Switch } from "@nextui-org/switch";
 import { Slider } from "@nextui-org/slider";
 import { Select, SelectItem } from "@nextui-org/select";
 import ReactMarkdown from "react-markdown";
-import { Accordion, AccordionItem } from "@nextui-org/accordion";
 import { API_Point } from "@/APIConfig";
 import {
   Dropdown,
@@ -28,6 +27,10 @@ import { saveAs } from "file-saver";
 import Loading from "./Loading";
 import PDFModal from "./pdfModal";
 import UploadModal from "./upload";
+import ChatHeader from "./ChatModalComponents/ChatHeader";
+import ChatInput from "./ChatModalComponents/ChatInput";
+import FileList from "./ChatModalComponents/FileList";
+import ChatMessageComp from "./ChatModalComponents/ChatMessage";
 
 type AIReply = {
   reply: string;
@@ -38,7 +41,7 @@ type AIReply = {
   suggestedQueries: string[];
 };
 
-interface ChatMessage {
+export interface ChatMessage {
   id: number;
   text: string;
   sender: "user" | "ai";
@@ -374,9 +377,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
         await updateChatFile();
 
         setIsTyping(false);
-        if (audioRef.current) {
-          audioRef.current.play();
-        }
       } catch (error) {
         console.error("Error fetching AI response after edit:", error);
         setMessages((prev) => [
@@ -429,25 +429,13 @@ const ChatModal: React.FC<ChatModalProps> = ({
       >
         <ModalContent>
           <ModalHeader className="flex justify-between items-center">
-            <span>{modalTitle}</span>
-            <div className="flex items-center space-x-2">
-              {fileName && (
-                <Chip size="sm" color="primary">
-                  {fileName}
-                </Chip>
-              )}
-              <Switch
-                checked={autoSave}
-                onChange={(e) => setAutoSave(e.target.checked)}
-                size="sm"
-              >
-                Auto-save
-              </Switch>
-              <Button size="sm" onClick={handleExportChat}>
-                <Download size={16} />
-                Export Chat
-              </Button>
-            </div>
+            <ChatHeader
+              modalTitle={modalTitle}
+              fileName={fileName}
+              autoSave={autoSave}
+              onAutoSaveChange={setAutoSave}
+              onExport={handleExportChat}
+            />
           </ModalHeader>
           <ModalBody>
             <div className="flex flex-col h-full">
@@ -488,111 +476,20 @@ const ChatModal: React.FC<ChatModalProps> = ({
                     className="flex-grow overflow-y-auto mb-4"
                     style={{ maxHeight: "calc(100vh - 300px)" }}
                   >
+                    {" "}
                     {messages.map((msg) => (
-                      <div
+                      <ChatMessageComp
                         key={msg.id}
-                        className={`flex mb-4 ${
-                          msg.sender === "user"
-                            ? "justify-end"
-                            : "justify-start"
-                        }`}
-                      >
-                        <div
-                          className={`flex items-start ${
-                            msg.sender === "user"
-                              ? "flex-row-reverse"
-                              : "flex-row"
-                          }`}
-                        >
-                          {msg.sender === "user" ? (
-                            <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
-                              {userInitial}
-                            </div>
-                          ) : (
-                            <div className="bg-gray-200 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold">
-                              {"A"}
-                            </div>
-                          )}
-
-                          <div
-                            className={`mx-2 p-2 rounded-lg ${
-                              msg.sender === "user"
-                                ? "bg-blue-500 text-white"
-                                : "bg-gray-200 text-black"
-                            }`}
-                          >
-                            {editingMessageId === msg.id ? (
-                              <div>
-                                <textarea
-                                  value={editInput}
-                                  onChange={(e) => setEditInput(e.target.value)}
-                                  className="w-full p-2 border rounded resize-none"
-                                  rows={3}
-                                />
-                                <div className="mt-2 flex justify-end">
-                                  <Button
-                                    size="sm"
-                                    color="primary"
-                                    onClick={() => handleSaveEdit(msg.id)}
-                                  >
-                                    Save
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    color="secondary"
-                                    onClick={() => setEditingMessageId(null)}
-                                    className="ml-2"
-                                  >
-                                    Cancel
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div>
-                                {msg.sender === "ai" ? (
-                                  <ReactMarkdown>{msg.text}</ReactMarkdown>
-                                ) : (
-                                  msg.text
-                                )}
-                                {msg.isEdited && (
-                                  <span className="text-xs italic ml-2">
-                                    (edited)
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {msg.sender === "user" &&
-                            editingMessageId !== msg.id && (
-                              <Dropdown>
-                                <DropdownTrigger>
-                                  <Button size="sm" variant="light">
-                                    •••
-                                  </Button>
-                                </DropdownTrigger>
-                                <DropdownMenu aria-label="Message actions">
-                                  <DropdownItem
-                                    key="edit"
-                                    startContent={<Pencil size={16} />}
-                                    onClick={() => handleEditMessage(msg.id)}
-                                  >
-                                    Edit
-                                  </DropdownItem>
-                                  <DropdownItem
-                                    key="delete"
-                                    className="text-danger"
-                                    color="danger"
-                                    startContent={<Trash2 size={16} />}
-                                    onClick={() => handleDeleteMessage(msg.id)}
-                                  >
-                                    Delete
-                                  </DropdownItem>
-                                </DropdownMenu>
-                              </Dropdown>
-                            )}
-                        </div>
-                      </div>
+                        message={msg}
+                        userInitial={userInitial}
+                        isEditing={editingMessageId === msg.id}
+                        editInput={editInput}
+                        onEditInputChange={(value) => setEditInput(value)}
+                        onSaveEdit={() => handleSaveEdit(msg.id)}
+                        onCancelEdit={() => setEditingMessageId(null)}
+                        onEditClick={() => handleEditMessage(msg.id)}
+                        onDeleteClick={() => handleDeleteMessage(msg.id)}
+                      />
                     ))}
                     {isTyping && (
                       <div className="flex justify-start">
@@ -604,103 +501,51 @@ const ChatModal: React.FC<ChatModalProps> = ({
                     )}
                   </div>
                   <PDFModal
+                    email={session?.user?.email || ""}
                     isOpen={isPdfModalOpen}
                     onClose={() => setIsPdfModalOpen(false)}
                     filename={pdfFilename}
                     specificPage={specificPage} // Pass the specific page number
                   />
-                  <Accordion>
-                    <AccordionItem
-                      key="1"
-                      aria-label="Accordion 1"
-                      title="References"
-                    >
-                      {references.length > 0
-                        ? references.map((ref) => (
-                            <div key={ref.filename}>
-                              <button
-                                key={ref.page}
-                                onClick={() => handleReferenceClick(ref)}
-                              >
-                                Open {ref.filename} - Page {ref.page}
-                              </button>
-                            </div>
-                          ))
-                        : "No references available."}
-                    </AccordionItem>
-                  </Accordion>
-                </div>
-                <div
-                  className="w-1/4 border-l pl-4 overflow-y-auto"
-                  style={{ maxHeight: "calc(100vh - 300px)" }}
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="font-medium">Your Files (Expand Context)</p>
-                    <Button
-                      size="sm"
-                      onClick={() => setIsUploadModalOpen(true)}
-                      startContent={<Upload size={16} />}
-                    >
-                      Upload
-                    </Button>
-                  </div>
-                  {userFiles.map((file) => (
-                    <div key={file} className="flex items-center mb-1">
-                      <input
-                        type="checkbox"
-                        checked={selectedFiles.includes(file)}
-                        onChange={() => handleFileSelect(file)}
-                        className="mr-2"
-                      />
-                      <div className="flex items-center">
-                        <Folder size={16} className="mr-2" /> {file}
+                  <div className="mt-4">
+                    <h3 className="text-lg font-semibold mb-2">References</h3>
+                    {references.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {references.map((ref, index) => (
+                          <Tooltip key={index} content={ref.comment} placement="top">
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              onClick={() => handleReferenceClick(ref)}
+                            >
+                              {ref.filename} - Page {ref.page}
+                            </Button>
+                          </Tooltip>
+                        ))}
                       </div>
-                    </div>
-                  ))}
+                    ) : (
+                      <p>No references available.</p>
+                    )}
+                  </div>
                 </div>
+                <FileList
+                  userFiles={userFiles}
+                  selectedFiles={selectedFiles}
+                  onFileSelect={handleFileSelect}
+                  onUploadClick={() => setIsUploadModalOpen(true)}
+                />
               </div>
             </div>
           </ModalBody>
           <ModalFooter>
-            <div className="w-full flex flex-col">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={handleTextareaChange}
-                onKeyDown={handleTextareaKeyDown}
-                placeholder="Type your message..."
-                rows={1}
-                className="w-full p-2 border rounded resize-none max-h-40 overflow-hidden"
-                style={{ height: "auto" }}
-                maxLength={500}
-              />
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-gray-500 text-sm">
-                  Press Enter to send, Shift+Enter for a new line.
-                </span>
-                <Button
-                  color="primary"
-                  onClick={handleSend}
-                  disabled={!input.trim()}
-                >
-                  Send
-                </Button>
-              </div>
-
-              {suggestedQueries.length > 0 && (
-                <div className="mt-2 flex flex-wrap">
-                  {suggestedQueries.map((query, idx) => (
-                    <Chip
-                      key={idx}
-                      onClick={() => handleSuggestedQueryClick(query)}
-                      className="mr-2 mb-2"
-                    >
-                      {query}
-                    </Chip>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ChatInput
+              input={input}
+              suggestedQueries={suggestedQueries}
+              onInputChange={handleTextareaChange}
+              onKeyDown={handleTextareaKeyDown}
+              onSend={handleSend}
+              onSuggestedQueryClick={handleSuggestedQueryClick}
+            />
           </ModalFooter>
         </ModalContent>
       </Modal>

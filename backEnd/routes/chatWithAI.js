@@ -58,7 +58,7 @@ Respond in the following JSON format:
   
   "references": [{
     "filename": "string {mentioned in metadata}",
-    "page": "number",
+    "page": "number {mentioned in metadata,ensure u are giving correct page number}",
     "comment": "string"
   }],
   "suggestedQueries": ["string"]
@@ -106,20 +106,20 @@ async function queryVectorStore(query, k = 3, filter = null) {
         });
 
       for (const [doc, score] of similaritySearchWithScoreResults) {
-        // Create a detailed context entry
+        // Create a detailed, structured context entry
         const contextEntry = `
-**File Name**: ${doc.metadata.fileName}
-**Page**: ${doc.metadata.page || "N/A"}
-**Content**: 
-\`\`\`
-${doc.pageContent}
-`;
-        formattedContext += contextEntry;
+{
+  "content": \`${doc.pageContent.trim()}\`,
+  "page": ${doc.metadata.page || "N/A"},
+  "filename": "${doc.metadata.fileName}"
+}
+        `;
+        formattedContext += contextEntry + ",\n";
         console.log(`Found context (score: ${score}):\n${contextEntry}\n`);
       }
     }
 
-    return formattedContext.trim();
+    return `[${formattedContext.trim().slice(0, -1)}]`; // Ensure it's a valid array
   } catch (error) {
     console.error("Error querying vector store:", error);
     throw error;
@@ -127,7 +127,7 @@ ${doc.pageContent}
 }
 
 const llm = new ChatOpenAI({
-  model: "gpt-4o-mini", // Changed from "gpt-4o-mini" to "gpt-4"
+  model: "gpt-4o", // Changed from "gpt-4o-mini" to "gpt-4"
   temperature: 0.7,
 });
 

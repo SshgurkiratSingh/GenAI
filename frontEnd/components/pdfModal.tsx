@@ -14,6 +14,7 @@ interface PDFModalProps {
   onClose: () => void;
   filename: string; // Pass filename to the component
   specificPage: number; // New prop for specific page
+  email?: string;
 }
 
 const PDFModal: React.FC<PDFModalProps> = ({
@@ -21,27 +22,31 @@ const PDFModal: React.FC<PDFModalProps> = ({
   onClose,
   filename,
   specificPage,
+  email = "gurkirat2022@hotmail.com", // Corrected typo in email
 }) => {
-  const pdfLink = `${API_Point}/guri2022@hotmail.com/${filename}#page=${specificPage}`; // Adjust the path as needed
+  const pdfLink = `${API_Point}/${email}/${filename}#page=${specificPage}`; // Adjust the path as needed
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="full">
-      <ModalContent>
-        <ModalHeader>
+      <ModalContent className="flex flex-col h-full">
+        <ModalHeader className="flex flex-col gap-1">
           <h2>{filename}</h2>
+          <p className="text-small text-default-500">Page: {specificPage}</p>
         </ModalHeader>
-        <ModalBody>
+        <ModalBody className="flex-grow">
           {/* Display PDF using an iframe */}
           <iframe
             src={pdfLink}
             width="100%"
-            height="600px"
+            height="100%" // Changed to 100% to take full height of ModalBody
             style={{ border: "none" }}
             title="PDF Document"
           ></iframe>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onClose}>Close</Button>
+          <Button color="danger" variant="light" onPress={onClose}>
+            Close
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
