@@ -123,13 +123,15 @@ const HomePage = () => {
               </>
             ) : (
               <>
+                {/* Main content login button visible only on small screens */}
                 <Button
                   color="primary"
-                  className="w-full sm:w-auto px-8 py-6 text-lg font-bold"
+                  className="w-full sm:w-auto px-8 py-6 text-lg font-bold lg:hidden block"
                   onClick={handleLoginClick}
                 >
                   Login
                 </Button>
+
                 <Button
                   color="secondary"
                   className="w-full sm:w-auto px-8 py-6 text-lg font-bold"
