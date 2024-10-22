@@ -290,6 +290,12 @@ const ChatModal: React.FC<ChatModalProps> = ({
 
   const handleSend = async (): Promise<void> => {
     if (input.trim()) {
+      // Check if no files are selected
+      if (selectedFiles.length === 0) {
+        toast.error("Please select at least one file to continue.");
+        return;
+      }
+
       const newUserMessage: ChatMessage = {
         id: messages.length + 1,
         text: input,
