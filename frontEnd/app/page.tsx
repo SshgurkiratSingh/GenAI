@@ -79,7 +79,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
       <Card className="w-full max-w-4xl bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg p-6 lg:p-12">
         <CardBody>
           {/* Heading */}
@@ -93,33 +93,32 @@ const HomePage = () => {
           </h2>
 
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col items-center sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             {session ? (
               <>
                 <ButtonVar label="New Chat" onClick={handleNewChat} s4 />
-
                 <ButtonVar
                   label="Upload File"
                   onClick={() => setIsUploadModalOpen(true)}
                   s4
                 />
-
                 <Link href="/chat">
                   <ButtonVar label="Browse History" onClick={() => {}} s4 />
                 </Link>
-
                 <ButtonVar
                   label="Chat with Link"
                   onClick={() => setIsChatURLModalOpen(true)}
                   s4
                 />
-                {/* Logout Button */}
 
-                <ButtonVar
-                  label="Log Out"
-                  onClick={handleLogout} // Call the logout function
-                  s4
-                />
+                {/* Add conditional visibility based on screen size for logout */}
+                <div className="hidden lg:block"> 
+                  <ButtonVar
+                    label="Log Out"
+                    onClick={handleLogout}
+                    s4
+                  />
+                </div>
               </>
             ) : (
               <>
