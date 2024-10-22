@@ -4,15 +4,13 @@ import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react"; // Import signOut
 import { Card, CardBody } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
-import { MdOutlineFileUpload } from "react-icons/md";
-import { HiDocumentSearch } from "react-icons/hi";
 import UploadModal from "@/components/upload";
 import ChatModal from "@/components/ChatModal";
 import LoginModal from "@/components/LoginModal";
 import RegisterModal from "@/components/RegisterModal";
 import ChatURLModal from "@/components/ChatWithLink";
 import Link from "next/link";
-import ButtonVar from "@/components/ButtonComp";
+import ButtonVar from "@/components/ButtonComp"; // Custom Button Component
 
 const HomePage = () => {
   const { data: session } = useSession();
@@ -93,7 +91,7 @@ const HomePage = () => {
           </h2>
 
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col items-center sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             {session ? (
               <>
                 <ButtonVar label="New Chat" onClick={handleNewChat} s4 />
@@ -113,25 +111,25 @@ const HomePage = () => {
                   onClick={() => setIsChatURLModalOpen(true)}
                   s4
                 />
-                {/* Logout Button */}
 
-                <ButtonVar
-                  label="Log Out"
-                  onClick={handleLogout} // Call the logout function
-                  s4
-                />
+                {/* Add conditional visibility based on screen size for logout */}
+                <div className="hidden lg:block"> 
+                  <ButtonVar
+                    label="Log Out"
+                    onClick={handleLogout}
+                    s4
+                  />
+                </div>
               </>
             ) : (
               <>
-                {/* Main content login button visible only on small screens */}
                 <Button
                   color="primary"
-                  className="w-full sm:w-auto px-8 py-6 text-lg font-bold lg:hidden block"
+                  className="w-full sm:w-auto px-8 py-6 text-lg font-bold"
                   onClick={handleLoginClick}
                 >
                   Login
                 </Button>
-
                 <Button
                   color="secondary"
                   className="w-full sm:w-auto px-8 py-6 text-lg font-bold"
