@@ -38,6 +38,28 @@ app.get("/list-files/:email", (req, res) => {
     res.json(files);
   });
 });
+// New DELETE route to delete a file
+app.delete("/file/delete/:email/:fileName", async (req, res) => {
+  const email = req.params.email;
+  const fileName = req.params.fileName;
+  const filePath = path.join(__dirname, "routes/files", email, fileName);
+
+  try {
+    // Attempt to unlink (delete) the file
+    await fs.promises.unlink(filePath);
+    res.json({ message: "File deleted successfully" });
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      return res.status(404).json({ error: "File not found" });
+    } else if (err.code === "EACCES") {
+      return res.status(403).json({ error: "Permission denied" });
+    } else {
+      // Log the error for debugging (optional)
+      console.error("Error deleting file:", err);
+      return res.status(500).json({ error: "Failed to delete file" });
+    }
+  }
+});
 
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
