@@ -579,7 +579,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
                   </div>
                   <ButtonVar
                     s5
-                    label="Generate PDF"
+                    label="Glance Reference"
                     onClick={handleOpenAIReferenceModal}
                     disabled={!selectedQuestion.trim()} // Disable if input is empty
                   />
