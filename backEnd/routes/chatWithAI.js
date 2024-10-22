@@ -217,5 +217,78 @@ router.post("/chat", async (req, res) => {
       .json({ error: "Internal server error", details: error.message });
   }
 });
+const referenceGeneratorPrompt = `Identify and match references from given data chunks to a provided answer by marking words or sentences with triple apostrophes ('''). Each chunk includes metadata, such as page number and filename, and an answer. Mark only those references valid for the answer with the correct page number. The output should include the relevant words and surrounding sentences from each chunk.
+
+- Precede each highlighted reference with the associated page number formatted as ###{pagenumber-fileName}.
+- Include not only the directly relevant words but also surrounding context sentences.
+
+# Steps
+
+1. Read the provided chunk of data, including metadata.
+2. Identify the references that are directly relevant to the given answer.
+3. Highlight valid references using triple apostrophes (''') within the text.
+4. Precede each marked reference with the correct page number and filename, formatted as ###{pagenumber-fileName}.
+5. Ensure the response includes surrounding context to provide clarity.
+
+# Output Format
+
+- A paragraph containing highlighted references, with formatted page numbers and filenames.
+- Ensure the context includes sentences surrounding the marked words.
+
+
+# Notes
+
+- Include both direct references and sufficient context for clarity.
+- Follow the specific format for page number and filename preceding each marked reference.`;
+
+router.post("/generate-references", async (req, res) => {
+  try {
+    const { question, answer, fileNames } = req.body;
+
+    if (!question || !answer || !fileNames || !Array.isArray(fileNames)) {
+      return res.status(400).json({ error: "Invalid input" });
+    }
+
+    console.log(`Generating references for question: "${question}"`);
+
+    // Query the vector store to retrieve chunks of context
+    const context = await queryVectorStore(question, 5, {
+      fileName: { $in: fileNames },
+      userEmail: req.body.email,
+    });
+
+    if (!context || context.length === 0) {
+      return res.status(404).json({ error: "No relevant context found" });
+    }
+
+    // Create the prompt model for reference generation
+    const referenceModel = new ChatOpenAI({
+      temperature: 0.5,
+      model: "gpt-4o-mini",
+    });
+    const promptTemplate = ChatPromptTemplate.fromMessages([
+      ["system", referenceGeneratorPrompt],
+      ["human", "Chunks:\n{chunks}\nAnswer:\n{answer}"],
+    ]);
+
+    const chain = promptTemplate.pipe(referenceModel);
+
+    console.log("Sending prompt to reference generation model...");
+
+    // Generate the highlighted references
+    const result = await chain.invoke({
+      chunks: context,
+      answer: answer,
+    });
+
+    console.log("Generated references:", result.content);
+
+    // Parse the result and send it back to the client
+    res.json({ references: result.content });
+  } catch (error) {
+    console.error("Error generating references:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 module.exports = router;

@@ -9,7 +9,7 @@ class ChatHistoryModule {
     this.baseDir = baseDir;
   }
 
-  async getFiles(req, res) {
+  async getFiles(req, res, next) {
     try {
       const { email } = req.body;
       if (!email) {
@@ -19,12 +19,11 @@ class ChatHistoryModule {
       const files = await fs.readdir(emailDir);
       return res.status(200).json({ message: "Files found", files });
     } catch (error) {
-      console.error("Error in getFiles:", error);
-      return res.status(500).json({ error: "Could not read email directory" });
+      next(error); // Pass the error to the error-handling middleware
     }
   }
 
-  async getChatHistory(req, res) {
+  async getChatHistory(req, res, next) {
     try {
       const { email } = req.body;
       if (!email) {
@@ -34,14 +33,11 @@ class ChatHistoryModule {
       const files = await fs.readdir(emailDir);
       return res.status(200).json({ message: "Files found", files });
     } catch (error) {
-      console.error("Error in getChatHistory:", error);
-      return res
-        .status(500)
-        .json({ error: "Could not read chat history directory" });
+      next(error);
     }
   }
 
-  async getChatFile(req, res) {
+  async getChatFile(req, res, next) {
     try {
       const { email, fname } = req.body;
       if (!email || !fname) {
@@ -56,23 +52,13 @@ class ChatHistoryModule {
         `${fname}.json`
       );
       const data = await fs.readFile(filePath, "utf-8");
-      return res
-        .status(200)
-        .json({ message: "File found", data: JSON.parse(data) });
+      return res.status(200).json(JSON.parse(data));
     } catch (error) {
-      console.error("Error in getChatFile:", error);
-      if (error.code === "ENOENT") {
-        return res
-          .status(404)
-          .json({
-            error: `File ${fname}.json does not exist for the given email`,
-          });
-      }
-      return res.status(500).json({ error: "Could not read the file" });
+      next(error);
     }
   }
 
-  async updateChatFile(req, res) {
+  async updateChatFile(req, res, next) {
     try {
       const { email, fname, data } = req.body;
       if (!email || !fname || !data) {
@@ -92,12 +78,11 @@ class ChatHistoryModule {
         .status(200)
         .json({ message: `File ${fname}.json updated successfully` });
     } catch (error) {
-      console.error("Error in updateChatFile:", error);
-      return res.status(500).json({ error: "Could not update the file" });
+      next(error);
     }
   }
 
-  async clearChatFile(req, res) {
+  async clearChatFile(req, res, next) {
     try {
       const { email, fname } = req.body;
       if (!email || !fname) {
@@ -118,21 +103,11 @@ class ChatHistoryModule {
         .status(200)
         .json({ message: `File ${fname}.json content cleared successfully` });
     } catch (error) {
-      console.error("Error in clearChatFile:", error);
-      if (error.code === "ENOENT") {
-        return res
-          .status(404)
-          .json({
-            error: `File ${fname}.json does not exist for the given email`,
-          });
-      }
-      return res
-        .status(500)
-        .json({ error: "Could not clear the content of the file" });
+      next(error);
     }
   }
 
-  async deleteChatFile(req, res) {
+  async deleteChatFile(req, res, next) {
     try {
       const { email, fname } = req.body;
       if (!email || !fname) {
@@ -151,15 +126,7 @@ class ChatHistoryModule {
         .status(200)
         .json({ message: `File ${fname}.json deleted successfully` });
     } catch (error) {
-      console.error("Error in deleteChatFile:", error);
-      if (error.code === "ENOENT") {
-        return res
-          .status(404)
-          .json({
-            error: `File ${fname}.json does not exist for the given email`,
-          });
-      }
-      return res.status(500).json({ error: "Could not delete the file" });
+      next(error);
     }
   }
 }
@@ -179,12 +146,18 @@ router.post(
   chatHistoryModule.updateChatFile.bind(chatHistoryModule)
 );
 router.post(
-  "/deleteChat",
+  "/clearChat",
   chatHistoryModule.clearChatFile.bind(chatHistoryModule)
 );
 router.post(
   "/deleteFile",
   chatHistoryModule.deleteChatFile.bind(chatHistoryModule)
 );
+
+// Error handling middleware
+router.use((err, req, res, next) => {
+  console.error("Internal Server Error:", err);
+  res.status(500).json({ error: "An unexpected error occurred" });
+});
 
 module.exports = router;

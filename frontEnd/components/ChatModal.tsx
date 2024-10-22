@@ -40,6 +40,20 @@ type AIReply = {
   references: References[];
   suggestedQueries: string[];
 };
+type MessageSender = "ai" | "user";
+
+interface ChatHistoryMessage {
+  text: string;
+  sender: MessageSender;
+}
+
+interface ChatHistoryData {
+  chatHistory: ChatHistoryMessage[];
+  fileName: string;
+  title: string;
+  contextWindow: number;
+  llmModel: string;
+}
 
 export interface ChatMessage {
   id: number;
@@ -48,7 +62,7 @@ export interface ChatMessage {
   references?: References[];
   isEdited?: boolean;
 }
-type References = {
+export type References = {
   filename: string;
   page: number;
   comment: string;
@@ -75,7 +89,17 @@ const ChatModal: React.FC<ChatModalProps> = ({
     { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
   ], // Add default value
 }) => {
-  const modalTitle = isNewChat ? "New Chat" : title || "Chat with AI Assistant";
+  const defaultTitle =
+    title ||
+    new Date().toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  const modalTitle = isNewChat ? "New Chat" : defaultTitle;
+
   const { data: session } = useSession();
   const userName = session?.user?.name || "User";
   const userInitial = userName.charAt(0).toUpperCase();
@@ -93,7 +117,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const audioRef = useRef<HTMLAudioElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatHistory, setChatHistory] = useState<string[]>([]);
-  const [autoSave, setAutoSave] = useState<boolean>(false);
+  const [autoSave, setAutoSave] = useState<boolean>(true);
   const [references, setReferences] = useState<References[]>([]);
 
   const [contextWindow, setContextWindow] = useState<number>(3);
@@ -120,7 +144,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
       setChatHistory([]);
       setSuggestedQueries(isNewChat ? [] : initialSuggestedQueries);
       setReferences([]);
-      setAutoSave(false);
+      setAutoSave(true);
       setLlmModel("GPT-4o-mini");
       setContextWindow(5);
 
@@ -209,7 +233,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
         sender: msg.sender,
       })),
       fileName,
-      title,
+      title: defaultTitle, // Use the defaultTitle here
       contextWindow,
       llmModel,
     };
@@ -217,12 +241,21 @@ const ChatModal: React.FC<ChatModalProps> = ({
     try {
       await axios.post(`${API_Point}/files/updateChat`, {
         email: session?.user?.email,
-        fname: title,
+        fname: defaultTitle, // Use the defaultTitle for the filename
         data: JSON.stringify(chatData),
       });
     } catch (error) {
       console.error("Error updating chat file:", error);
     }
+  };
+
+  const handleExportChat = () => {
+    const chatContent = messages
+      .map((msg) => `${msg.sender.toUpperCase()}: ${msg.text}`)
+      .join("\n\n");
+
+    const blob = new Blob([chatContent], { type: "text/plain;charset=utf-8" });
+    saveAs(blob, `${defaultTitle || "chat"}_export.txt`); // Use defaultTitle here
   };
 
   const handleSend = async (): Promise<void> => {
@@ -408,15 +441,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
     setChatHistory(updatedHistory);
 
     await updateChatFile();
-  };
-
-  const handleExportChat = () => {
-    const chatContent = messages
-      .map((msg) => `${msg.sender.toUpperCase()}: ${msg.text}`)
-      .join("\n\n");
-
-    const blob = new Blob([chatContent], { type: "text/plain;charset=utf-8" });
-    saveAs(blob, `${title || "chat"}_export.txt`);
   };
 
   useEffect(() => {

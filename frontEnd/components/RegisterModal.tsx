@@ -81,11 +81,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
       .post("/api/register", data)
       .then(() => {
         onClose();
-        toast.success("Account Created. Please login to continue.");
+        toast.success("Account created successfully. Please login to continue.");
         onLoginClick(); // Switch to login modal after successful registration
       })
       .catch((error) => {
-        toast.error(error.response?.data?.message || "Something went wrong.");
+        toast.error(error.response?.data?.message || "An error occurred during registration.");
       })
       .finally(() => setIsLoading(false));
   };

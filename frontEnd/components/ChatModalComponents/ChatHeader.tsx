@@ -25,13 +25,7 @@ const ChatHeader = ({
             {fileName}
           </Chip>
         )}
-        <Switch
-          checked={autoSave}
-          onChange={(e) => onAutoSaveChange(e.target.checked)}
-          size="sm"
-        >
-          Auto-save
-        </Switch>
+       
         <Button size="sm" onClick={onExport}>
           <Download size={16} />
           Export Chat

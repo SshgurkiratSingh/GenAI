@@ -55,7 +55,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         router.refresh();
         onClose(); // Close the modal only on success
       } else if (callback?.error) {
-        toast.error(callback.error);
+        toast.error(callback.error || "An error occurred during login");
       }
     });
   };

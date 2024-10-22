@@ -87,6 +87,12 @@ const HomePage = () => {
             {session ? (
               <div className="flex justify-center space-x-4">
                 <Button
+                  color="danger"
+                  onClick={handleNewChat} // Open the chat modal
+                >
+                  New Chat
+                </Button>
+                <Button
                   color="success"
                   endContent={<MdOutlineFileUpload />}
                   onClick={() => setIsUploadModalOpen(true)}
@@ -107,12 +113,6 @@ const HomePage = () => {
                   onClick={() => setIsChatURLModalOpen(true)} // Open the chat URL modal
                 >
                   Chat with Link
-                </Button>
-                <Button
-                  color="danger"
-                  onClick={handleNewChat} // Open the chat modal
-                >
-                  New Chat
                 </Button>
               </div>
             ) : (
