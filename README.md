@@ -261,6 +261,8 @@ This document provides an overview of the frontend components and features imple
 
 ### 10. PDFModal (pdfModal.tsx)
 
+![Pdf Modal](images/pdfReference.png)
+
 - Modal for viewing PDF files
 - Features:
   - Display specific pages of PDF documents
