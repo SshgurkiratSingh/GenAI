@@ -217,17 +217,17 @@ router.post("/chat", async (req, res) => {
       .json({ error: "Internal server error", details: error.message });
   }
 });
-const referenceGeneratorPrompt = `Identify and match references from given data chunks to a provided answer by marking words or sentences with triple apostrophes ('''). Each chunk includes metadata, such as page number and filename, and an answer. Mark only those references valid for the answer with the correct page number. The output should include the relevant words and surrounding sentences from each chunk.
+const referenceGeneratorPrompt = `Identify and match references from given data chunks to a provided answer by marking words or sentences with triple apostrophes ('''). Each chunk includes metadata, such as page number and filename, and an answer. Mark only those references valid for the answer with the correct page number. The output should include the relevant words and surrounding sentences (min-3 surrounding lines content) from each chunk.
 
-- Precede each highlighted reference with the associated page number formatted as ###{pagenumber-fileName}.
+- Precede each highlighted reference with the associated page number formatted as ###pagenumber-fileName.
 - Include not only the directly relevant words but also surrounding context sentences.
 
 # Steps
 
 1. Read the provided chunk of data, including metadata.
-2. Identify the references that are directly relevant to the given answer.
+2. Identify the references in chunks with surrounding text that are directly relevant to the given answer.
 3. Highlight valid references using triple apostrophes (''') within the text.
-4. Precede each marked reference with the correct page number and filename, formatted as ###{pagenumber-fileName}.
+4. Precede each marked reference with the correct page number and filename, formatted as ###pagenumber-fileName.
 5. Ensure the response includes surrounding context to provide clarity.
 
 # Output Format
@@ -239,7 +239,8 @@ const referenceGeneratorPrompt = `Identify and match references from given data 
 # Notes
 
 - Include both direct references and sufficient context for clarity.
-- Follow the specific format for page number and filename preceding each marked reference.`;
+- Follow the specific format for page number and filename preceding each marked reference.
+- Ensure the reply contain chunks  with ''' ''' references on words or sentences.`;
 router.post("/generate-references", async (req, res) => {
   try {
     console.log("Received POST request to /generate-references");
@@ -289,7 +290,7 @@ router.post("/generate-references", async (req, res) => {
 
     const promptTemplate = ChatPromptTemplate.fromMessages([
       ["system", referenceGeneratorPrompt],
-      ["human", "Chunks:\n{chunks}\nAnswer:\n{answer}"],
+      ["human", "Chunks:{chunks}\nAnswer:\n{answer}"],
     ]);
 
     const chain = promptTemplate.pipe(referenceModel);

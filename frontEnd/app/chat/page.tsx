@@ -179,7 +179,7 @@ const ChatHistoryTable: React.FC = () => {
     if (fileToDelete) {
       try {
         let response;
-        if (chatFiles.some(file => file.file === fileToDelete)) {
+        if (chatFiles.some((file) => file.file === fileToDelete)) {
           // Delete chat file
           response = await axios.post(`${API_Point}/files/deleteFile`, {
             email: session?.user?.email,
@@ -187,13 +187,13 @@ const ChatHistoryTable: React.FC = () => {
           });
         } else {
           // Delete uploaded file
-          response = await axios.delete(`${API_Point}/file/delete/${session?.user?.email}/${fileToDelete}`);
+          response = await axios.delete(
+            `${API_Point}/file/delete/${session?.user?.email}/${fileToDelete}`
+          );
         }
 
         if (response.status === 200) {
-          toast.success(
-            "File deleted successfully! Refreshing file lists..."
-          );
+          toast.success("File deleted successfully! Refreshing file lists...");
           fetchChatHistory();
           fetchUploadedFiles();
         } else {
@@ -260,7 +260,6 @@ const ChatHistoryTable: React.FC = () => {
       </div>
     );
   }
-  
 
   if (isLoading) {
     return <Spinner label="Loading chat history..." />;

@@ -11,6 +11,7 @@ import { Spinner } from "@nextui-org/spinner";
 import { Card, CardBody } from "@nextui-org/card";
 import axios from "axios";
 import { API_Point } from "@/APIConfig";
+import Loading from "./Loading";
 
 interface AIReferenceModalProps {
   isOpen: boolean;
@@ -32,6 +33,29 @@ const AIReferenceModal: React.FC<AIReferenceModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [references, setReferences] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const renderHighlightedText = (text: string) => {
+    const parts = text.split(/'''(.*?)'''/);
+    return parts.map((part, index) => {
+      // Every odd index contains the text that was between triple quotes
+      if (index % 2 === 1) {
+        return (
+          <span
+            key={index}
+            className="inline bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded-md font-medium"
+            style={{ display: "inline" }} // Ensuring the display is inline
+          >
+            {part}
+          </span>
+        );
+      }
+      // Regular text, rendered inline
+      return (
+        <span key={index} style={{ display: "inline" }}>
+          {part}
+        </span>
+      );
+    });
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -76,23 +100,27 @@ const AIReferenceModal: React.FC<AIReferenceModalProps> = ({
                 AI Generated References
               </ModalHeader>
               <ModalBody>
-                {loading ? (
-                  <div className="flex justify-center">
-                    <Spinner size="lg" />
-                  </div>
-                ) : error ? (
-                  <div className="text-red-600">{error}</div>
-                ) : references ? (
-                  <div className="space-y-4">
-                    {references.split("\n").map((reference, index) => (
-                      <Card key={index}>
-                        <CardBody>{reference}</CardBody>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div>No references available.</div>
-                )}
+                <div className="py-4">
+                  {loading ? (
+                    <div className="flex justify-center items-center p-8">
+                      <Loading />
+                    </div>
+                  ) : error ? (
+                    <div className="text-red-600 p-4">{error}</div>
+                  ) : references ? (
+                    <div>
+                      {references.split("\n").map((reference, index) => (
+                        <span key={index} className="inline-block">
+                          {renderHighlightedText(reference)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center p-4">
+                      No references available.
+                    </div>
+                  )}
+                </div>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
