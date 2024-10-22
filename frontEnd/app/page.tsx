@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react"; // Import signOut
 import { Card, CardBody } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
+import { MdOutlineFileUpload } from "react-icons/md";
+import { HiDocumentSearch } from "react-icons/hi";
 import UploadModal from "@/components/upload";
 import ChatModal from "@/components/ChatModal";
 import LoginModal from "@/components/LoginModal";
 import RegisterModal from "@/components/RegisterModal";
 import ChatURLModal from "@/components/ChatWithLink";
 import Link from "next/link";
-import ButtonVar from "@/components/ButtonComp"; // Custom Button Component
+import ButtonVar from "@/components/ButtonComp";
 
 const HomePage = () => {
   const { data: session } = useSession();
@@ -91,7 +93,7 @@ const HomePage = () => {
           </h2>
 
           {/* Buttons */}
-          <div className="flex flex-col items-center sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             {session ? (
               <>
                 <ButtonVar label="New Chat" onClick={handleNewChat} s4 />
@@ -111,15 +113,13 @@ const HomePage = () => {
                   onClick={() => setIsChatURLModalOpen(true)}
                   s4
                 />
+                {/* Logout Button */}
 
-                {/* Add conditional visibility based on screen size for logout */}
-                <div className="hidden lg:block"> 
-                  <ButtonVar
-                    label="Log Out"
-                    onClick={handleLogout}
-                    s4
-                  />
-                </div>
+                <ButtonVar
+                  label="Log Out"
+                  onClick={handleLogout} // Call the logout function
+                  s4
+                />
               </>
             ) : (
               <>
