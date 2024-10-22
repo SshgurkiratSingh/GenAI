@@ -599,7 +599,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
             <div className="flex items-center gap-2">
               <ButtonVar
                 s3
-                label="Generate Glance"
+                label="Generate Generative Glance"
                 onClick={handleOpenAIReferenceModal}
                 disabled={!selectedQuestion.trim() || isTyping} // Disable if input is empty
               />
