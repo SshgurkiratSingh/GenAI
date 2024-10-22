@@ -4,6 +4,7 @@ The frontend is hosted as http not https
 
 ## Overview
 
+![Overview](images/HomePage.png)
 GenAI is a full-stack web application that combines the power of AI with document analysis and chat functionality. It allows users to upload PDF files, chat with AI about the content, and even interact with web pages through a chat interface.
 
 ## Features
@@ -170,6 +171,8 @@ The server will start on the default port 2500 or the port specified in the `POR
 
 # Frontend Components and Features
 
+![Frontend](images/AiRefer.png)
+
 This document provides an overview of the frontend components and features implemented in our application.
 
 ## Components
@@ -204,6 +207,8 @@ This document provides an overview of the frontend components and features imple
 
 ### 3. HomePage (page.tsx in app directory)
 
+![Home PAge](images/LOADING.png)
+
 - Main landing page of the application
 - Features:
   - User authentication integration
@@ -220,13 +225,13 @@ This document provides an overview of the frontend components and features imple
 - Displays user's chat history and uploaded files
 - Features:
   - Pagination for chat files and uploaded files
-  - View, delete, and manage chat histories
+  - View, delete, and manage chat historiesChat History
   - File management (view, delete)
   - Separate tables for chat files and uploaded files
 
 ### 5. AIReferenceModal (AIReferenceModal.tsx)
 
-![Chat History](images/GENAIReference.png)
+![AI Reference Modal](images/GENAIReference.png)
 
 - Modal for generating AI references
 - Features:
