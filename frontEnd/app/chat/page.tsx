@@ -179,7 +179,7 @@ const ChatHistoryTable: React.FC = () => {
     if (fileToDelete) {
       try {
         let response;
-        if (chatFiles.some((file) => file.file === fileToDelete)) {
+        if (chatFiles.some(file => file.file === fileToDelete)) {
           // Delete chat file
           response = await axios.post(`${API_Point}/files/deleteFile`, {
             email: session?.user?.email,
@@ -187,13 +187,13 @@ const ChatHistoryTable: React.FC = () => {
           });
         } else {
           // Delete uploaded file
-          response = await axios.delete(
-            `${API_Point}/file/delete/${session?.user?.email}/${fileToDelete}`
-          );
+          response = await axios.delete(`${API_Point}/file/delete/${session?.user?.email}/${fileToDelete}`);
         }
 
         if (response.status === 200) {
-          toast.success("File deleted successfully! Refreshing file lists...");
+          toast.success(
+            "File deleted successfully! Refreshing file lists..."
+          );
           fetchChatHistory();
           fetchUploadedFiles();
         } else {
@@ -246,11 +246,11 @@ const ChatHistoryTable: React.FC = () => {
   if (status === "loading") {
     return <Spinner label="Loading chat history..." />;
   }
+
   if (status === "unauthenticated") {
     return (
       <div>
-        <p className="text-xl">Please log in to view your chat history.</p>
-        <br />
+        <p>Please log in to view your chat history.</p>
         <Button
           onClick={() => signIn()}
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -434,7 +434,7 @@ const ChatHistoryTable: React.FC = () => {
             <ModalHeader>Confirm Deletion</ModalHeader>
             <ModalBody>
               Are you sure you want to delete the chat file:{" "}
-              <strong>{fileToDelete} ?</strong>
+              <strong>{fileToDelete}</strong>?
             </ModalBody>
             <ModalFooter>
               <button
