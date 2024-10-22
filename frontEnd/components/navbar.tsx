@@ -33,10 +33,7 @@ const NavigationBar = () => {
       name: "Browse History",
       href: "/chat",
     },
-    {
-      name: "About Us",
-      href: "/about",
-    },
+ 
   ];
 
   const handleLogout = () => {
