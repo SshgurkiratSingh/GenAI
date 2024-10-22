@@ -74,26 +74,33 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen  flex items-center justify-center">
-      <Card className="w-full max-w-3xl bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg p-9">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <Card className="w-full max-w-4xl bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg p-6 lg:p-12">
         <CardBody>
-          <h1 className="text-center text-6xl font-extrabold tracking-wider text-white mb-6">
+          {/* Heading */}
+          <h1 className="text-center text-3xl sm:text-4xl lg:text-6xl font-extrabold tracking-wider text-white mb-4 sm:mb-6">
             {text}
           </h1>
-          <h1 className="text-center text-xl text-white mb-8">
+
+          {/* Subheading */}
+          <h2 className="text-center text-lg sm:text-xl lg:text-2xl text-white mb-6 sm:mb-8">
             Unlock the power of your PDFs with AI-driven insights and analysis.
-          </h1>
-          <div>
+          </h2>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             {session ? (
-              <div className="flex justify-center space-x-4">
+              <>
                 <Button
                   color="danger"
+                  className="w-full sm:w-auto"
                   onClick={handleNewChat} // Open the chat modal
                 >
                   New Chat
                 </Button>
                 <Button
                   color="success"
+                  className="w-full sm:w-auto"
                   endContent={<MdOutlineFileUpload />}
                   onClick={() => setIsUploadModalOpen(true)}
                 >
@@ -102,7 +109,11 @@ const HomePage = () => {
 
                 {/* Link Browse History to the /chat route */}
                 <Link href="/chat">
-                  <Button color="danger" startContent={<HiDocumentSearch />}>
+                  <Button
+                    color="danger"
+                    className="w-full sm:w-auto"
+                    startContent={<HiDocumentSearch />}
+                  >
                     Browse History
                   </Button>
                 </Link>
@@ -110,33 +121,35 @@ const HomePage = () => {
                 {/* Chat with Link button */}
                 <Button
                   color="primary"
+                  className="w-full sm:w-auto"
                   onClick={() => setIsChatURLModalOpen(true)} // Open the chat URL modal
                 >
                   Chat with Link
                 </Button>
-              </div>
+              </>
             ) : (
-              <div className="flex justify-center space-x-4">
+              <>
                 <Button
                   color="primary"
-                  className="px-8 py-6 text-lg font-bold"
+                  className="w-full sm:w-auto px-8 py-6 text-lg font-bold"
                   onClick={handleLoginClick}
                 >
                   Login
                 </Button>
                 <Button
                   color="secondary"
-                  className="px-8 py-6 text-lg font-bold"
+                  className="w-full sm:w-auto px-8 py-6 text-lg font-bold"
                   onClick={handleSignUpClick}
                 >
                   Sign Up
                 </Button>
-              </div>
+              </>
             )}
           </div>
         </CardBody>
       </Card>
 
+      {/* Modals */}
       <UploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}

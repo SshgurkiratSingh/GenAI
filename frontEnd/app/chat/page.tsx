@@ -246,11 +246,11 @@ const ChatHistoryTable: React.FC = () => {
   if (status === "loading") {
     return <Spinner label="Loading chat history..." />;
   }
-
   if (status === "unauthenticated") {
     return (
       <div>
-        <p>Please log in to view your chat history.</p>
+        <p className="text-xl">Please log in to view your chat history.</p>
+        <br />
         <Button
           onClick={() => signIn()}
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -260,6 +260,7 @@ const ChatHistoryTable: React.FC = () => {
       </div>
     );
   }
+  
 
   if (isLoading) {
     return <Spinner label="Loading chat history..." />;
@@ -434,7 +435,7 @@ const ChatHistoryTable: React.FC = () => {
             <ModalHeader>Confirm Deletion</ModalHeader>
             <ModalBody>
               Are you sure you want to delete the chat file:{" "}
-              <strong>{fileToDelete}</strong>?
+              <strong>{fileToDelete} ?</strong>
             </ModalBody>
             <ModalFooter>
               <button
