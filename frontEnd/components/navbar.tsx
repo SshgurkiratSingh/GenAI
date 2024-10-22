@@ -74,25 +74,23 @@ const NavigationBar = () => {
         </NavbarContent>
 
         {/* Align right - Welcome Message and Logout */}
-        <NavbarContent justify="end">
-          {
-            session ? (
-              <>
-                <NavbarItem>
-                  <span>Welcome, {session.user?.name}</span>
-                </NavbarItem>
-                <NavbarItem>
-                  <Button
-                    color="danger"
-                    startContent={<IoIosLogOut />} // Fixed startIcon usage
-                    onClick={handleLogout} // Added onClick to handle logout
-                  >
-                    Log Out
-                  </Button>
-                </NavbarItem>
-              </>
-            ) : null /* Remove Login and Sign Up buttons */
-          }
+        <NavbarContent justify="end" className="desktop-only">
+          {session ? (
+            <>
+              <NavbarItem>
+                <span>Welcome, {session.user?.name}</span>
+              </NavbarItem>
+              <NavbarItem>
+                <Button
+                  color="danger"
+                  startContent={<IoIosLogOut />} // Fixed startIcon usage
+                  onClick={handleLogout} // Added onClick to handle logout
+                >
+                  Log Out
+                </Button>
+              </NavbarItem>
+            </>
+          ) : null /* Remove Login and Sign Up buttons */}
         </NavbarContent>
 
         <NavbarMenu>
@@ -104,8 +102,8 @@ const NavigationBar = () => {
                   index === 2
                     ? "warning"
                     : index === items.length - 1
-                      ? "danger"
-                      : "foreground"
+                    ? "danger"
+                    : "foreground"
                 }
                 href={item.href}
               >
