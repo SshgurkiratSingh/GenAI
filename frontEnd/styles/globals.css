@@ -11,6 +11,7 @@
 }
 body {
     /* background: linear-gradient(150deg, rgba(136, 15, 15, 0.801) , rgba(117, 50, 138, 0.603), rgba(30, 83, 153, 0.74) ); */
+    background-image: url("/background.jpg");
 }
 @keyframes gradientAnimation {
     0% {

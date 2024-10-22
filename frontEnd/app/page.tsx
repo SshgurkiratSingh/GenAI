@@ -74,7 +74,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 flex items-center justify-center">
+    <div className="min-h-screen  flex items-center justify-center">
       <Card className="w-full max-w-3xl bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg p-9">
         <CardBody>
           <h1 className="text-center text-6xl font-extrabold tracking-wider text-white mb-6">
