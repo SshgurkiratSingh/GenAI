@@ -1,3 +1,4 @@
+
 @import './animations.css'; /* Ensure this is correct */
 @tailwind base;
 @tailwind components;
@@ -9,10 +10,22 @@
     background-size: 200% 200%; /* To allow movement */
     animation: gradientAnimation 4s ease-in-out infinite;
 }
-body {
-    /* background: linear-gradient(150deg, rgba(136, 15, 15, 0.801) , rgba(117, 50, 138, 0.603), rgba(30, 83, 153, 0.74) ); */
-    background-image: url("/background.jpg");
+html, body {
+  margin: 0;  /* Remove any default margin */
+  padding: 0; /* Remove any default padding */
+  height: 100%; /* Ensure the body takes up the full height of the viewport */
+  overflow: hidden; /* Prevent scrolling */
 }
+
+body {
+  background-image: url("/background.jpg");
+  background-size: cover; /* Ensures the background covers the entire screen */
+  background-position: center; /* Center the background image */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  background-attachment: fixed; /* Keeps the background image fixed */
+}
+
+
 @keyframes gradientAnimation {
     0% {
         background-position: 0% 50%;
@@ -321,4 +334,3 @@ body {
     background-size: 200% 200%; /* To allow movement */
     animation: gradientAnimation 4s ease-in-out infinite;
 }
-
