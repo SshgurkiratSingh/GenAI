@@ -1,13 +1,8 @@
-import {
-  Button,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from "@nextui-org/react";
+import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
 import { Pencil, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { ChatMessage } from "../ChatModal";
+import React, { useEffect, useState } from "react";
 
 interface ChatMessageProps {
   message: ChatMessage;
@@ -19,6 +14,7 @@ interface ChatMessageProps {
   onCancelEdit: () => void;
   onEditClick: () => void;
   onDeleteClick: () => void;
+  isTyping?: boolean;  // Add isTyping prop for the animation
 }
 
 const ChatMessageComp = ({
@@ -31,6 +27,7 @@ const ChatMessageComp = ({
   onCancelEdit,
   onEditClick,
   onDeleteClick,
+  isTyping = false,  // Default isTyping to false
 }: ChatMessageProps) => {
   return (
     <div
@@ -59,7 +56,13 @@ const ChatMessageComp = ({
               : "bg-gray-200 text-black"
           } w-full md:max-w-md`}
         >
-          {isEditing ? (
+          {isTyping ? ( // Show typing indicator animation when isTyping is true
+            <div className="flex space-x-1">
+              <div className="dot bg-blue-400"></div>
+              <div className="dot bg-blue-400"></div>
+              <div className="dot bg-blue-400"></div>
+            </div>
+          ) : isEditing ? (
             <div>
               <textarea
                 value={editInput}
@@ -125,4 +128,5 @@ const ChatMessageComp = ({
     </div>
   );
 };
+
 export default ChatMessageComp;

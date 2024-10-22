@@ -1,8 +1,8 @@
-
 @import './animations.css'; /* Ensure this is correct */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 .gradient-text {
     background: -webkit-linear-gradient(27deg,#4014df, #c22323, #4014df, #00c0ff);
     -webkit-background-clip: text;
@@ -10,6 +10,7 @@
     background-size: 200% 200%; /* To allow movement */
     animation: gradientAnimation 4s ease-in-out infinite;
 }
+
 html, body {
   margin: 0;  /* Remove any default margin */
   padding: 0; /* Remove any default padding */
@@ -25,7 +26,6 @@ body {
   background-attachment: fixed; /* Keeps the background image fixed */
 }
 
-
 @keyframes gradientAnimation {
     0% {
         background-position: 0% 50%;
@@ -37,19 +37,23 @@ body {
         background-position: 0% 50%;
     }
 }
+
 .gradient-text2 {
     background: -webkit-linear-gradient(27deg,#51ff00, #00ccff, #eeff00, #ff00f2);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-size: 200% 200%; /* To allow movement */
     animation: gradientAnimation 4s ease-in-out infinite;
-}.gradient-text3 {
+}
+
+.gradient-text3 {
     background: -webkit-linear-gradient(27deg,#ff7300, #f80707, #8d20b8, #ff00f2);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-size: 200% 200%; /* To allow movement */
     animation: gradientAnimation 4s ease-in-out infinite;
 }
+
 @keyframes gradient-flow {
   0% {
     background-position: 0% 50%;
@@ -67,16 +71,17 @@ body {
   -webkit-background-clip: text; /* Ensure compatibility with WebKit browsers */
   color: transparent; /* Make the text transparent to show the gradient */
 }
-/* From Uiverse.io by Li-Deheng */ 
+
+/* Loader Animation */
 .loader {
     display: flex;
     justify-content: center;
     align-items: center;
-    --color: hsl(0, 0%, 87%);
-    --animation: 2s ease-in-out infinite;
-  }
-  
-  .loader .circle {
+    --color: hsl(210, 70%, 60%);
+    --animation: 1.8s ease-in-out infinite;
+}
+
+.loader .circle {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -87,207 +92,163 @@ body {
     border-radius: 50%;
     margin: 0 10px;
     background-color: transparent;
-    animation: circle-keys var(--animation);
-  }
-  
-  .loader .circle .dot {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.loader .circle .dot {
     position: absolute;
     transform: translate(-50%, -50%);
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background-color: var(--color);
-    animation: dot-keys var(--animation);
-  }
-  
-  .loader .circle .outline {
+    animation: bounce 1.5s ease-in-out infinite;
+}
+
+.loader .circle .outline {
     position: absolute;
     transform: translate(-50%, -50%);
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    animation: outline-keys var(--animation);
-  }
-  
-  .circle:nth-child(2) {
-    animation-delay: 0.3s;
-  }
-  
-  .circle:nth-child(3) {
-    animation-delay: 0.6s;
-  }
-  
-  .circle:nth-child(4) {
-    animation-delay: 0.9s;
-  }
-  
-  .circle:nth-child(5) {
-    animation-delay: 1.2s;
-  }
-  
-  .circle:nth-child(2) .dot {
-    animation-delay: 0.3s;
-  }
-  
-  .circle:nth-child(3) .dot {
-    animation-delay: 0.6s;
-  }
-  
-  .circle:nth-child(4) .dot {
-    animation-delay: 0.9s;
-  }
-  
-  .circle:nth-child(5) .dot {
-    animation-delay: 1.2s;
-  }
-  
-  .circle:nth-child(1) .outline {
-    animation-delay: 0.9s;
-  }
-  
-  .circle:nth-child(2) .outline {
-    animation-delay: 1.2s;
-  }
-  
-  .circle:nth-child(3) .outline {
-    animation-delay: 1.5s;
-  }
-  
-  .circle:nth-child(4) .outline {
-    animation-delay: 1.8s;
-  }
-  
-  .circle:nth-child(5) .outline {
-    animation-delay: 2.1s;
-  }
-  
-  @keyframes circle-keys {
-    0% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  
-    50% {
-      transform: scale(1.5);
-      opacity: 0.5;
-    }
-  
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes dot-keys {
-    0% {
-      transform: scale(1);
-    }
-  
-    50% {
-      transform: scale(0);
-    }
-  
-    100% {
-      transform: scale(1);
-    }
-  }
-  
-  @keyframes outline-keys {
-    0% {
-      transform: scale(0);
-      outline: solid 20px var(--color);
-      outline-offset: 0;
-      opacity: 1;
-    }
-  
-    100% {
-      transform: scale(1);
-      outline: solid 0 transparent;
-      outline-offset: 20px;
-      opacity: 0;
-    }
-  }
+    animation: ripple 1.5s ease-in-out infinite;
+}
 
-  .container {
+/* Delays for staggered effect */
+.circle:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.circle:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+.circle:nth-child(4) {
+    animation-delay: 0.9s;
+}
+
+.circle:nth-child(5) {
+    animation-delay: 1.2s;
+}
+
+/* Keyframes for loader animations */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.4);
+        opacity: 0.7;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.5);
+    }
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Content Styling */
+.container {
     padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
     font-family: Arial, sans-serif;
-  }
-  .header {
+}
+
+.header {
     text-align: center;
     margin-bottom: 2rem;
-  }
-  .title {
+}
+
+.title {
     font-size: 2.5rem;
     font-weight: bold;
     color: #0070f3;
-  }
-  .subtitle {
+}
+
+.subtitle {
     font-size: 1.25rem;
     color: #555;
-  }
-  .section {
+}
+
+.section {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 3rem;
     padding: 2rem; /* Added padding to give some breathing room */
-    
     border-radius: 10px; /* Rounded corners */
-   
-  }
+}
 
-  
-  .section-title {
+.section-title {
     font-size: 2.5rem; /* Slightly increased font size for emphasis */
     font-weight: bold;
     color: #333;
     margin-bottom: 1.5rem;
     letter-spacing: 1px; /* Add letter spacing for readability */
     text-transform: uppercase; /* Make the title all caps for impact */
+}
 
-  }
-  
-  .section-title:hover {
+.section-title:hover {
     color: #0070f3; /* Change color on hover for emphasis */
-  }
-  .center {
+}
+
+.center {
     text-align: center;
-  }
-  .section-text {
+}
+
+.section-text {
     flex: 1;
     padding-right: 1.5rem;
-  }
-  .section-image {
+}
+
+.section-image {
     flex: 1;
     text-align: center;
-  }
-  
-  .section-image img {
-    width: 100%; 
-    height: 100%; 
-    max-width: 400px; 
-    object-fit: cover; 
-    border-radius: 10px; 
+}
+
+.section-image img {
+    width: 100%;
+    height: 100%;
+    max-width: 400px;
+    object-fit: cover;
+    border-radius: 10px;
     transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for scaling and shadow */
-  }
-  
-  .section-image img:hover {
+}
+
+.section-image img:hover {
     transform: scale(1.1); /* Enlarge the image to 110% */
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Add a shadow on hover */
-  }
-  
-  .icon {
+}
+
+.icon {
     width: 80px;
     height: 80px;
     object-fit: contain;
-  }
-  .features-container {
+}
+
+.features-container {
     display: flex;
     justify-content: space-between;
-  }
-  .feature-card {
+}
+
+.feature-card {
     text-align: center;
     flex: 1;
     margin: 2rem;
@@ -295,26 +256,27 @@ body {
     border: 1px solid #eaeaea;
     border-radius: 10px;
     width: 150px;
-   
+}
 
-  }
-  .feature-card:hover {
+.feature-card:hover {
     transform: scale(1.05); /* Slightly enlarge the card */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Add a shadow */
-
     cursor: pointer;
-  }
-  .feature-title {
+}
+
+.feature-title {
     font-size: 1.5rem;
     font-weight: bold;
     margin-bottom: 1rem;
     color: #333;
-  }
-  .cta-section {
+}
+
+.cta-section {
     text-align: center;
     margin-top: 2rem;
-  }
-  .cta-button {
+}
+
+.cta-button {
     background-color: #0070f3;
     color: #fff;
     padding: 1rem 2rem;
@@ -323,17 +285,20 @@ body {
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
-  }
-  .cta-button:hover {
+}
+
+.cta-button:hover {
     background-color: #005bb5;
-  }
-  .gradient-text2 {
+}
+
+.gradient-text2 {
     background: -webkit-linear-gradient(27deg, #6a0dad, #00c0ff); /* Purple to Blue */
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-size: 200% 200%; /* To allow movement */
     animation: gradientAnimation 4s ease-in-out infinite;
 }
+
 /* Hide the welcome and logout button on small screens */
 @media (max-width: 768px) {
   .desktop-only {
