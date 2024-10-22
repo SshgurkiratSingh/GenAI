@@ -22,7 +22,7 @@ const PDFModal: React.FC<PDFModalProps> = ({
   onClose,
   filename,
   specificPage,
-  email = "gurkirat2022@hotmail.com", // Corrected typo in email
+  email = "", // Corrected typo in email
 }) => {
   const pdfLink = `${API_Point}/${email}/${filename}#page=${specificPage}`; // Adjust the path as needed
 
