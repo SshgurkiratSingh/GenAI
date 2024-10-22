@@ -541,7 +541,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
                       <div className="flex justify-start">
                         <div className="flex items-center bg-gray-200 text-black rounded-lg p-2">
                           <span className="typing-indicator"></span>
-                          AI is typing... <Loading />
+                          <Loading />
                         </div>
                       </div>
                     )}
@@ -577,12 +577,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
                       <p>No references available.</p>
                     )}
                   </div>
-                  <ButtonVar
-                    s5
-                    label="Glance Reference"
-                    onClick={handleOpenAIReferenceModal}
-                    disabled={!selectedQuestion.trim()} // Disable if input is empty
-                  />
                 </div>
                 <FileList
                   userFiles={userFiles}
@@ -602,6 +596,14 @@ const ChatModal: React.FC<ChatModalProps> = ({
               onSend={handleSend}
               onSuggestedQueryClick={handleSuggestedQueryClick}
             />
+            <div className="flex items-center gap-2">
+              <ButtonVar
+                s3
+                label="Generate Glance"
+                onClick={handleOpenAIReferenceModal}
+                disabled={!selectedQuestion.trim() || isTyping} // Disable if input is empty
+              />
+            </div>
           </ModalFooter>
         </ModalContent>
       </Modal>
