@@ -7,11 +7,10 @@ import {
   ModalFooter,
 } from "@nextui-org/modal";
 import { Button } from "@nextui-org/button";
-import { Spinner } from "@nextui-org/spinner";
-import { Card, CardBody } from "@nextui-org/card";
 import axios from "axios";
 import { API_Point } from "@/APIConfig";
 import Loading from "./Loading";
+import PDFModal from "./pdfModal";
 
 interface AIReferenceModalProps {
   isOpen: boolean;
@@ -33,21 +32,50 @@ const AIReferenceModal: React.FC<AIReferenceModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [references, setReferences] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // New state for PDF Modal
+  const [isPDFModalOpen, setPDFModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<string>("");
+  const [selectedPage, setSelectedPage] = useState<number>(1);
+
   const renderHighlightedText = (text: string) => {
     const parts = text.split(/'''(.*?)'''/);
+
     return parts.map((part, index) => {
-      // Every odd index contains the text that was between triple quotes
+      // Detect the pattern '###'
+      if (part.startsWith("###")) {
+        const pageMatch = part.match(/###(\d+)-/); // Extract the page number
+        const fileMatch = part.match(/-(.*\.pdf)/); // Extract the file name
+
+        const page = pageMatch ? parseInt(pageMatch[1]) : null;
+        const file = fileMatch ? fileMatch[1] : null;
+
+        if (page && file) {
+          return (
+            <Button variant="ghost"
+              key={index}
+              onClick={() => handleReferenceClick(page, file)}
+              className=" text-blue-500 px-2 py-1 rounded-md"
+            >
+              {"Open Reference"}
+            </Button>
+          );
+        }
+      }
+
+      // Highlight text in triple quotes
       if (index % 2 === 1) {
         return (
           <span
             key={index}
             className="inline bg-blue-100 dark:bg-blue-900 px-1 py-0.5 rounded-md font-medium"
-            style={{ display: "inline" }} // Ensuring the display is inline
+            style={{ display: "inline" }}
           >
             {part}
           </span>
         );
       }
+
       // Regular text, rendered inline
       return (
         <span key={index} style={{ display: "inline" }}>
@@ -55,6 +83,12 @@ const AIReferenceModal: React.FC<AIReferenceModalProps> = ({
         </span>
       );
     });
+  };
+
+  const handleReferenceClick = (page: number, file: string) => {
+    setSelectedFile(file);
+    setSelectedPage(page);
+    setPDFModalOpen(true); // Open the PDF modal
   };
 
   useEffect(() => {
@@ -131,6 +165,15 @@ const AIReferenceModal: React.FC<AIReferenceModalProps> = ({
           )}
         </ModalContent>
       </Modal>
+
+      {/* Render the PDFModal */}
+      <PDFModal
+        isOpen={isPDFModalOpen}
+        onClose={() => setPDFModalOpen(false)}
+        filename={selectedFile}
+        specificPage={selectedPage}
+        email={email}
+      />
     </>
   );
 };

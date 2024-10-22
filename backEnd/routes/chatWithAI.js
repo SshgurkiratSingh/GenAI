@@ -238,9 +238,10 @@ const referenceGeneratorPrompt = `Identify and match references from given data 
 
 # Notes
 
-- Include both direct references and sufficient context for clarity.
+- Donot include any summary or introduction in the output.
 - Follow the specific format for page number and filename preceding each marked reference.
-- Ensure the reply contain chunks  with ''' ''' references on words or sentences.`;
+- Ensure the reply contain chunks  with ''' ''' references on words or sentences.
+`;
 router.post("/generate-references", async (req, res) => {
   try {
     console.log("Received POST request to /generate-references");

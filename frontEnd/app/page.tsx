@@ -12,6 +12,7 @@ import LoginModal from "@/components/LoginModal";
 import RegisterModal from "@/components/RegisterModal";
 import ChatURLModal from "@/components/ChatWithLink";
 import Link from "next/link";
+import ButtonVar from "@/components/ButtonComp";
 
 const HomePage = () => {
   const { data: session } = useSession();
@@ -29,7 +30,9 @@ const HomePage = () => {
 
   useEffect(() => {
     const username = session?.user?.name || "Guest";
-    const fullText = session ? `Welcome, ${username}!` : "Welcome to PDF Reader!";
+    const fullText = session
+      ? `Welcome, ${username}!`
+      : "Welcome to PDF Reader!";
     setText(fullText);
   }, [session]);
 
@@ -93,48 +96,30 @@ const HomePage = () => {
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             {session ? (
               <>
-                <Button
-                  color="danger"
-                  className="w-full sm:w-auto"
-                  onClick={handleNewChat} // Open the chat modal
-                >
-                  New Chat
-                </Button>
-                <Button
-                  color="success"
-                  className="w-full sm:w-auto"
-                  endContent={<MdOutlineFileUpload />}
+                <ButtonVar label="New Chat" onClick={handleNewChat} s4 />
+
+                <ButtonVar
+                  label="Upload File"
                   onClick={() => setIsUploadModalOpen(true)}
-                >
-                  Upload File
-                </Button>
+                  s4
+                />
 
                 <Link href="/chat">
-                  <Button
-                    color="danger"
-                    className="w-full sm:w-auto"
-                    startContent={<HiDocumentSearch />}
-                  >
-                    Browse History
-                  </Button>
+                  <ButtonVar label="Browse History" onClick={() => {}} s4 />
                 </Link>
 
-                <Button
-                  color="primary"
-                  className="w-full sm:w-auto"
+                <ButtonVar
+                  label="Chat with Link"
                   onClick={() => setIsChatURLModalOpen(true)}
-                >
-                  Chat with Link
-                </Button>
-
+                  s4
+                />
                 {/* Logout Button */}
-                <Button
-                  color="secondary"
-                  className="w-full sm:w-auto"
+
+                <ButtonVar
+                  label="Log Out"
                   onClick={handleLogout} // Call the logout function
-                >
-                  Log Out
-                </Button>
+                  s4
+                />
               </>
             ) : (
               <>
