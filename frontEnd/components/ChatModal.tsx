@@ -33,6 +33,7 @@ import FileList from "./ChatModalComponents/FileList";
 import ChatMessageComp from "./ChatModalComponents/ChatMessage";
 import AIReferenceModal from "./AIReferenceModal";
 import ButtonVar from "./ButtonComp";
+import { toast } from "react-toastify";
 
 type AIReply = {
   reply: string;
@@ -136,6 +137,28 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const [userFiles, setUserFiles] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
+  const fetchUserFiles = async () => {
+    if (!session?.user?.email) return;
+
+    try {
+      const response = await axios.get(
+        `${API_Point}/list-files/${session.user.email}`
+      );
+      setUserFiles(response.data);
+    } catch (error) {
+      console.error("Error fetching user files:", error);
+    }
+  };
+
+  // Handle refresh click
+  const handleRefreshClick = async () => {
+    try {
+      await fetchUserFiles();
+    } finally {
+      toast.success("User files refreshed successfully!");
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       setMessages([
@@ -579,6 +602,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
                   </div>
                 </div>
                 <FileList
+                  onRefreshClick={handleRefreshClick}
                   userFiles={userFiles}
                   selectedFiles={selectedFiles}
                   onFileSelect={handleFileSelect}
