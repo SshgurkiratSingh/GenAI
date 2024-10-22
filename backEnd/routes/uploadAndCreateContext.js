@@ -1,7 +1,31 @@
 const express = require("express");
 const router = express.Router();
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
+
+// Function to delete the uploaded PDF file
+async function deleteUploadedFile(userEmail, fileName) {
+  const filePath = path.join(__dirname, "files", userEmail, fileName);
+  try {
+    await fs.unlink(filePath);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting file: ${error}`);
+    return false;
+  }
+}
+
+// Route to delete an uploaded file
+router.delete('/delete/:userEmail/:fileName', async (req, res) => {
+  const { userEmail, fileName } = req.params;
+  const success = await deleteUploadedFile(userEmail, fileName);
+  
+  if (success) {
+    res.status(200).json({ message: 'File deleted successfully' });
+  } else {
+    res.status(500).json({ message: 'Failed to delete file' });
+  }
+});
 
 const pdf = require("pdf-parse");
 const multer = require("multer");

@@ -31,6 +31,7 @@ import ChatHeader from "./ChatModalComponents/ChatHeader";
 import ChatInput from "./ChatModalComponents/ChatInput";
 import FileList from "./ChatModalComponents/FileList";
 import ChatMessageComp from "./ChatModalComponents/ChatMessage";
+import AIReferenceModal from "./AIReferenceModal";
 
 type AIReply = {
   reply: string;
@@ -115,6 +116,11 @@ const ChatModal: React.FC<ChatModalProps> = ({
     initialSuggestedQueries
   );
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const [isAIReferenceModalOpen, setIsAIReferenceModalOpen] = useState(false); // State to manage AIReferenceModal
+  const [selectedQuestion, setSelectedQuestion] = useState<string>(""); // Hold the selected question for the references
+  const [selectedAnswer, setSelectedAnswer] = useState<string>(""); // Hold the selected answer for the references
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [chatHistory, setChatHistory] = useState<string[]>([]);
   const [autoSave, setAutoSave] = useState<boolean>(true);
@@ -295,6 +301,10 @@ const ChatModal: React.FC<ChatModalProps> = ({
         setMessages((prev) => [...prev, newAIMessage]);
         setReferences(aiResponse.references);
 
+        // Store the last question and answer for reference generation
+        setSelectedQuestion(input);
+        setSelectedAnswer(aiResponse.reply);
+
         if (aiResponse.suggestedQueries) {
           setSuggestedQueries(aiResponse.suggestedQueries);
         }
@@ -322,6 +332,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
         setIsTyping(false);
       }
     }
+  };
+  const handleOpenAIReferenceModal = () => {
+    setIsAIReferenceModalOpen(true);
   };
 
   // Update handleSaveEdit function
@@ -563,6 +576,13 @@ const ChatModal: React.FC<ChatModalProps> = ({
                       <p>No references available.</p>
                     )}
                   </div>
+                  <Button
+                    onClick={handleOpenAIReferenceModal}
+                    variant="flat"
+                    size="sm"
+                  >
+                    Generate References
+                  </Button>
                 </div>
                 <FileList
                   userFiles={userFiles}
@@ -589,6 +609,14 @@ const ChatModal: React.FC<ChatModalProps> = ({
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onUploadSuccess={handleUploadSuccess}
+      />
+      <AIReferenceModal
+        isOpen={isAIReferenceModalOpen}
+        onClose={() => setIsAIReferenceModalOpen(false)}
+        question={selectedQuestion}
+        answer={selectedAnswer}
+        email={session?.user?.email || ""}
+        userFiles={selectedFiles}
       />
     </>
   );

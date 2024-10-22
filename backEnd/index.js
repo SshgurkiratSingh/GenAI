@@ -13,6 +13,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 const uploadAndCreateContext = require("./routes/uploadAndCreateContext");
 app.use("/upload", uploadAndCreateContext);
+app.use("/file", uploadAndCreateContext); // Add this line for the new delete route
 
 const chatWithAI = require("./routes/chatWithAI");
 app.use("/chat", rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }), chatWithAI);

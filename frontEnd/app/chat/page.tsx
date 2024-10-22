@@ -178,17 +178,24 @@ const ChatHistoryTable: React.FC = () => {
   const confirmDelete = async () => {
     if (fileToDelete) {
       try {
-        const response = await axios.post(`${API_Point}/files/deleteFile`, {
-          email: session?.user?.email,
-          fname: fileToDelete,
-        });
+        let response;
+        if (chatFiles.some(file => file.file === fileToDelete)) {
+          // Delete chat file
+          response = await axios.post(`${API_Point}/files/deleteFile`, {
+            email: session?.user?.email,
+            fname: fileToDelete,
+          });
+        } else {
+          // Delete uploaded file
+          response = await axios.delete(`${API_Point}/file/delete/${session?.user?.email}/${fileToDelete}`);
+        }
 
         if (response.status === 200) {
           toast.success(
-            "File deleted successfully! Refreshing chat history..."
+            "File deleted successfully! Refreshing file lists..."
           );
           fetchChatHistory();
-          fetchUploadedFiles(); // Refresh uploaded files
+          fetchUploadedFiles();
         } else {
           toast.error("Failed to delete the file.");
         }

@@ -240,32 +240,53 @@ const referenceGeneratorPrompt = `Identify and match references from given data 
 
 - Include both direct references and sufficient context for clarity.
 - Follow the specific format for page number and filename preceding each marked reference.`;
-
 router.post("/generate-references", async (req, res) => {
   try {
-    const { question, answer, fileNames } = req.body;
+    console.log("Received POST request to /generate-references");
+    console.log("Request body:", req.body); // Log entire request body for inspection
 
-    if (!question || !answer || !fileNames || !Array.isArray(fileNames)) {
+    const { question, answer, userFiles } = req.body; // Changed fileNames to userFiles
+
+    // Check if the inputs are valid
+    if (!question || !answer || !userFiles || !Array.isArray(userFiles)) {
+      console.log("Invalid input detected");
       return res.status(400).json({ error: "Invalid input" });
     }
 
     console.log(`Generating references for question: "${question}"`);
+    console.log(`Using filenames: ${userFiles.join(", ")}`); // Changed fileNames to userFiles
+
+    // Log the query parameters before querying the vector store
+    console.log("Querying vector store with the following parameters:", {
+      question,
+      userFiles,
+      email: req.body.email,
+    });
 
     // Query the vector store to retrieve chunks of context
     const context = await queryVectorStore(question, 5, {
-      fileName: { $in: fileNames },
+      fileName: { $in: userFiles }, // Changed fileNames to userFiles
       userEmail: req.body.email,
     });
 
+    // Check if any context was found
     if (!context || context.length === 0) {
+      console.log("No relevant context found in vector store");
       return res.status(404).json({ error: "No relevant context found" });
     }
 
+    console.log(
+      `Retrieved ${context.length} chunks of context from vector store`
+    );
+
     // Create the prompt model for reference generation
+    console.log("Initializing reference generation model...");
+
     const referenceModel = new ChatOpenAI({
       temperature: 0.5,
       model: "gpt-4o-mini",
     });
+
     const promptTemplate = ChatPromptTemplate.fromMessages([
       ["system", referenceGeneratorPrompt],
       ["human", "Chunks:\n{chunks}\nAnswer:\n{answer}"],

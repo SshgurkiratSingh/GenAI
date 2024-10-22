@@ -10,7 +10,7 @@ import { Button } from "@nextui-org/button";
 import { Spinner } from "@nextui-org/spinner";
 import { Card, CardBody } from "@nextui-org/card";
 import axios from "axios";
-import PDFModal from "./pdfModal";
+import { API_Point } from "@/APIConfig";
 
 interface AIReferenceModalProps {
   isOpen: boolean;
@@ -21,8 +21,6 @@ interface AIReferenceModalProps {
   userFiles: string[];
 }
 
-
-
 const AIReferenceModal: React.FC<AIReferenceModalProps> = ({
   isOpen,
   onClose,
@@ -32,9 +30,8 @@ const AIReferenceModal: React.FC<AIReferenceModalProps> = ({
   userFiles,
 }) => {
   const [loading, setLoading] = useState(true);
-  const [references, setReferences] = useState();
+  const [references, setReferences] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -46,32 +43,29 @@ const AIReferenceModal: React.FC<AIReferenceModalProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post("/api/generate-reference", {
-        question,
-        answer,
-        email,
-        userFiles,
-      });
+      const response = await axios.post(
+        `${API_Point}/chat/generate-references`,
+        {
+          question,
+          answer,
+          email,
+          userFiles,
+        }
+      );
       setReferences(response.data.references);
-      setRetryCount(0);
     } catch (error) {
       console.error("Error generating references:", error);
       setError("Failed to generate references. Please try again.");
-      if (retryCount < 3) {
-        setRetryCount(prev => prev + 1);
-        setTimeout(generateReferences, 2000);
-      }
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
     <>
-      <Modal 
-        isOpen={isOpen} 
-        onClose={onClose} 
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
         size="2xl"
         scrollBehavior="inside"
       >
@@ -82,7 +76,23 @@ const AIReferenceModal: React.FC<AIReferenceModalProps> = ({
                 AI Generated References
               </ModalHeader>
               <ModalBody>
-               
+                {loading ? (
+                  <div className="flex justify-center">
+                    <Spinner size="lg" />
+                  </div>
+                ) : error ? (
+                  <div className="text-red-600">{error}</div>
+                ) : references ? (
+                  <div className="space-y-4">
+                    {references.split("\n").map((reference, index) => (
+                      <Card key={index}>
+                        <CardBody>{reference}</CardBody>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div>No references available.</div>
+                )}
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
@@ -93,7 +103,6 @@ const AIReferenceModal: React.FC<AIReferenceModalProps> = ({
           )}
         </ModalContent>
       </Modal>
-  
     </>
   );
 };
