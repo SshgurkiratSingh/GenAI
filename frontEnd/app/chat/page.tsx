@@ -19,7 +19,7 @@ import {
   ModalBody,
   ModalFooter,
 } from "@nextui-org/modal";
-import ContinueChat from "@/components/continueChat";
+import ChatModal from "@/components/ChatModal";
 import { toast } from "react-toastify";
 import { API_Point } from "@/APIConfig";
 import { Button } from "@nextui-org/button";
@@ -29,6 +29,12 @@ interface ChatFile {
   file: string;
 }
 
+interface ChatMessage {
+  id: number;
+  text: string;
+  sender: "user" | "ai";
+}
+
 const ChatHistoryTable: React.FC = () => {
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -36,6 +42,7 @@ const ChatHistoryTable: React.FC = () => {
   const { data: session, status } = useSession();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedChatHistory, setSelectedChatHistory] = useState<ChatMessage[]>([]);
 
   // New state for delete confirmation modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
@@ -85,9 +92,24 @@ const ChatHistoryTable: React.FC = () => {
     }
   };
 
-  const openModal = (file: string) => {
+  const openModal = async (file: string) => {
     setSelectedFile(file);
-    setIsModalOpen(true);
+    try {
+      const response = await axios.post<{ message: string; data: string }>(
+        `${API_Point}/files/chat`,
+        { email: session?.user?.email, fname: file }
+      );
+      const chatData = JSON.parse(response.data.data);
+      setSelectedChatHistory(chatData.chatHistory.map((msg: string, index: number) => ({
+        id: index + 1,
+        text: msg,
+        sender: index % 2 === 0 ? "user" : "ai"
+      })));
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+      setError("Failed to fetch chat history. Please try again.");
+    }
   };
 
   const closeModal = () => {
@@ -244,14 +266,14 @@ const ChatHistoryTable: React.FC = () => {
       </div>
 
       {/* Modal for Continue Chat */}
-      {selectedFile && (
-        <ContinueChat
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          email={session?.user?.email || ""}
-          fileName={selectedFile}
-        />
-      )}
+      <ChatModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={selectedFile || ""}
+        fileName={selectedFile || ""}
+        isNewChat={!selectedFile}
+        initialChatHistory={selectedChatHistory}
+      />
 
       {/* Modal for Delete Confirmation */}
       {fileToDelete && (

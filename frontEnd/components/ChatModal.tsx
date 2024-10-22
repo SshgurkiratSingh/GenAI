@@ -61,6 +61,7 @@ interface ChatModalProps {
   title?: string;
   fileName?: string;
   isNewChat?: boolean;
+  initialChatHistory?: ChatMessage[];
 }
 
 const ChatModal: React.FC<ChatModalProps> = ({
@@ -70,15 +71,20 @@ const ChatModal: React.FC<ChatModalProps> = ({
   title = "",
   fileName = "",
   isNewChat = false,
+  initialChatHistory = [
+    { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
+  ], // Add default value
 }) => {
   const modalTitle = isNewChat ? "New Chat" : title || "Chat with AI Assistant";
   const { data: session } = useSession();
   const userName = session?.user?.name || "User";
   const userInitial = userName.charAt(0).toUpperCase();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(
+    initialChatHistory || [
+      { id: 1, text: "Hello! How can I assist you today?", sender: "ai" },
+    ]
+  );
   const [input, setInput] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [suggestedQueries, setSuggestedQueries] = useState<string[]>(
@@ -194,14 +200,14 @@ const ChatModal: React.FC<ChatModalProps> = ({
     setSuggestedQueries(initialSuggestedQueries);
   }, [initialSuggestedQueries]);
 
-  const updateChatFile = async (currentMessage: string | null = null) => {
+  const updateChatFile = async () => {
     if (!autoSave) return;
 
-    // Prepare data for saving, including the current message if provided
     const chatData = {
-      chatHistory: currentMessage
-        ? [...chatHistory, currentMessage]
-        : chatHistory,
+      chatHistory: messages.map((msg) => ({
+        text: msg.text,
+        sender: msg.sender,
+      })),
       fileName,
       title,
       contextWindow,
@@ -226,6 +232,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
         text: input,
         sender: "user",
       };
+
       setMessages((prev) => [...prev, newUserMessage]);
       setInput("");
       setIsTyping(true);
@@ -243,16 +250,16 @@ const ChatModal: React.FC<ChatModalProps> = ({
           },
           { headers: { "Content-Type": "application/json" } }
         );
-        const aiResponse = response.data;
 
+        const aiResponse = response.data;
         const newAIMessage: ChatMessage = {
           id: messages.length + 2,
           text: aiResponse.reply,
           sender: "ai",
           references: aiResponse.references,
         };
-        setMessages((prev) => [...prev, newAIMessage]);
 
+        setMessages((prev) => [...prev, newAIMessage]);
         setReferences(aiResponse.references);
 
         if (aiResponse.suggestedQueries) {
@@ -262,8 +269,8 @@ const ChatModal: React.FC<ChatModalProps> = ({
         const updatedHistory = [...chatHistory, input, aiResponse.reply];
         setChatHistory(updatedHistory);
 
-        // Update chat file with current user message included
-        await updateChatFile(input);
+        // Update chat file after message updates are complete
+        await updateChatFile();
 
         setIsTyping(false);
         if (audioRef.current) {
@@ -283,6 +290,74 @@ const ChatModal: React.FC<ChatModalProps> = ({
       }
     }
   };
+
+  // Update handleSaveEdit function
+  const handleSaveEdit = async (id: number) => {
+    if (editInput.trim()) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === id ? { ...msg, text: editInput, isEdited: true } : msg
+        )
+      );
+      setEditingMessageId(null);
+      setEditInput("");
+
+      const updatedHistory = chatHistory.map((msg, index) =>
+        index === id - 1 ? editInput : msg
+      );
+      setChatHistory(updatedHistory);
+
+      setIsTyping(true);
+      try {
+        const response = await axios.post<AIReply>(
+          `${API_Point}/chat/chat`,
+          {
+            message: editInput,
+            history: updatedHistory.slice(-contextWindow * 2),
+            email: session?.user?.email,
+            fileName: fileName,
+            llmModel: llmModel,
+          },
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        const aiResponse = response.data;
+        const newAIMessage: ChatMessage = {
+          id: messages.length + 1,
+          text: aiResponse.reply,
+          sender: "ai",
+          references: aiResponse.references,
+        };
+
+        setMessages((prev) => [...prev, newAIMessage]);
+        setReferences(aiResponse.references);
+
+        if (aiResponse.suggestedQueries) {
+          setSuggestedQueries(aiResponse.suggestedQueries);
+        }
+
+        const finalUpdatedHistory = [...updatedHistory, aiResponse.reply];
+        setChatHistory(finalUpdatedHistory);
+
+        // Update chat file after all changes are complete
+        await updateChatFile();
+
+        setIsTyping(false);
+      } catch (error) {
+        console.error("Error fetching AI response after edit:", error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: prev.length + 1,
+            text: "Error in communication with AI after edit.",
+            sender: "ai",
+          },
+        ]);
+        setIsTyping(false);
+      }
+    }
+  };
+
   const handleReferenceClick = (ref: References) => {
     // Set the filename and specific page from the reference
     setPdfFilename(ref.filename); // Assuming ref has a filename property
@@ -322,73 +397,6 @@ const ChatModal: React.FC<ChatModalProps> = ({
     if (messageToEdit) {
       setEditingMessageId(id);
       setEditInput(messageToEdit.text);
-    }
-  };
-
-  const handleSaveEdit = async (id: number) => {
-    if (editInput.trim()) {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === id ? { ...msg, text: editInput, isEdited: true } : msg
-        )
-      );
-      setEditingMessageId(null);
-      setEditInput("");
-
-      // Update chat history
-      const updatedHistory = chatHistory.map((msg, index) =>
-        index === id - 1 ? editInput : msg
-      );
-      setChatHistory(updatedHistory);
-
-      // Refetch AI response
-      setIsTyping(true);
-      try {
-        const response = await axios.post<AIReply>(
-          `${API_Point}/chat/chat`,
-          {
-            message: editInput,
-            history: updatedHistory.slice(-contextWindow * 2),
-            email: session?.user?.email,
-            fileName: fileName,
-            llmModel: llmModel,
-          },
-          { headers: { "Content-Type": "application/json" } }
-        );
-        const aiResponse = response.data;
-
-        const newAIMessage: ChatMessage = {
-          id: messages.length + 1,
-          text: aiResponse.reply,
-          sender: "ai",
-          references: aiResponse.references,
-        };
-        setMessages((prev) => [...prev, newAIMessage]);
-
-        setReferences(aiResponse.references);
-
-        if (aiResponse.suggestedQueries) {
-          setSuggestedQueries(aiResponse.suggestedQueries);
-        }
-
-        const finalUpdatedHistory = [...updatedHistory, aiResponse.reply];
-        setChatHistory(finalUpdatedHistory);
-
-        await updateChatFile();
-
-        setIsTyping(false);
-      } catch (error) {
-        console.error("Error fetching AI response after edit:", error);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: prev.length + 1,
-            text: "Error in communication with AI after edit.",
-            sender: "ai",
-          },
-        ]);
-        setIsTyping(false);
-      }
     }
   };
 
@@ -512,7 +520,11 @@ const ChatModal: React.FC<ChatModalProps> = ({
                     {references.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {references.map((ref, index) => (
-                          <Tooltip key={index} content={ref.comment} placement="top">
+                          <Tooltip
+                            key={index}
+                            content={ref.comment}
+                            placement="top"
+                          >
                             <Button
                               size="sm"
                               variant="flat"
