@@ -6,7 +6,7 @@ The frontend is hosted as http not https
 
 ![Overview](images/HomePage.png)
 GenAI is a full-stack web application that combines the power of AI with document analysis and chat functionality. It allows users to upload PDF files, chat with AI about the content, and even interact with web pages through a chat interface.
-
+![AI Reference Modal](images/GENAIReference.png)
 ## Features
 
 - PDF upload and analysis
